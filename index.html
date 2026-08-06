@@ -1092,15 +1092,17 @@
     video: {
       title: 'Add Video',
       fields: [
-        { name:'link', label:'Video link (YouTube, Vimeo...)', kind:'text', placeholder:'https://youtube.com/watch?v=...', required:true },
+        { name:'link', label:'Video link (YouTube, Vimeo...)', kind:'text', placeholder:'https://youtube.com/watch?v=... (optional)', errorMsg:'add a link or choose a video from your gallery below' },
+        { name:'videoFile', label:'Or choose from gallery', kind:'file', accept:'video/*', maxSizeMB:20, helper:'Max file size: 20MB', errorMsg:'please choose a video (under 20MB)' },
         { name:'caption', label:'Caption', kind:'text', placeholder:'caption (optional)' }
-      ]
+      ],
+      requireOneOf: ['link', 'videoFile']
     },
     gift: {
       title: 'Add Gift',
       fields: [
         { name:'goodFor', label:'This gift card is also good for', kind:'text', placeholder:'one movie night / one free hug / one vent call' },
-        { name:'link', label:'Gift card / e-gift link', kind:'text', placeholder:'https://...', required:true },
+        { name:'link', label:'Gift card / e-gift link', kind:'text', placeholder:'https://... (optional)' },
         { name:'note', label:'Note', kind:'textarea', placeholder:'a note to go with it (optional)' }
       ]
     }
@@ -1153,6 +1155,7 @@
     root.innerHTML = '';
     if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     mediaRecorder = null; recordedChunks = []; doodleCtx = null;
+    pauseAllAudio();
   }
 
   function modalShell(key, title, bodyHtml){
@@ -1204,20 +1207,24 @@
       </div>`;
     }
     if (f.kind === 'file') {
+      const accept = f.accept || 'image/*';
+      const isVideo = accept.indexOf('video') === 0;
       return `<div class="modal-field" data-field="${f.name}">
         <label>${f.label}</label>
         <div class="file-row">
-          <input type="file" name="${f.name}" accept="image/*">
+          <input type="file" name="${f.name}" accept="${accept}">
         </div>
         <div class="helper">${f.helper||''}</div>
-        <div class="field-err">please choose a photo (under 5MB)</div>
-        <img class="thumb-preview" id="photoPreview" alt="preview">
+        <div class="field-err">${f.errorMsg || 'please choose a photo (under 5MB)'}</div>
+        ${isVideo
+          ? `<video class="thumb-preview" data-preview="${f.name}" controls playsinline></video>`
+          : `<img class="thumb-preview" data-preview="${f.name}" alt="preview">`}
       </div>`;
     }
     return `<div class="modal-field" data-field="${f.name}">
       <label>${f.label}</label>
       <input type="text" name="${f.name}" placeholder="${f.placeholder||''}">
-      <div class="field-err">this field is required</div>
+      <div class="field-err">${f.errorMsg || 'this field is required'}</div>
     </div>`;
   }
 
@@ -1225,29 +1232,32 @@
     const def = MODAL_DEFS[item.type];
     modalShell(item.key, def.title, def.fields.map(fieldHtml).join(''));
 
-    let photoDataUrl = null;
-    const fileInput = document.querySelector('#modalForm input[type="file"]');
-    if (fileInput) {
+    const fileDataUrls = {};
+    document.querySelectorAll('#modalForm input[type="file"]').forEach(fileInput => {
+      const fieldDef = def.fields.find(x => x.name === fileInput.name) || {};
+      const maxBytes = (fieldDef.maxSizeMB || 5) * 1024 * 1024;
       fileInput.addEventListener('change', () => {
         const file = fileInput.files[0];
         const wrap = fileInput.closest('.modal-field');
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
+        if (file.size > maxBytes) {
           wrap.classList.add('error');
-          photoDataUrl = null;
+          fileDataUrls[fileInput.name] = null;
           return;
         }
         wrap.classList.remove('error');
         const reader = new FileReader();
         reader.onload = () => {
-          photoDataUrl = reader.result;
-          const preview = document.getElementById('photoPreview');
-          preview.src = photoDataUrl;
-          preview.classList.add('show');
+          fileDataUrls[fileInput.name] = reader.result;
+          const preview = wrap.querySelector(`[data-preview="${fileInput.name}"]`);
+          if (preview) {
+            preview.src = reader.result;
+            preview.classList.add('show');
+          }
         };
         reader.readAsDataURL(file);
       });
-    }
+    });
 
     document.getElementById('modalForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1258,9 +1268,10 @@
       def.fields.forEach(f => {
         const wrap = form.querySelector(`[data-field="${f.name}"]`);
         if (f.kind === 'file') {
-          if (f.required && !photoDataUrl) { wrap.classList.add('error'); valid = false; }
+          const val = fileDataUrls[f.name] || null;
+          if (f.required && !val) { wrap.classList.add('error'); valid = false; }
           else wrap.classList.remove('error');
-          data.file = photoDataUrl;
+          data[f.name] = val;
         } else {
           const el = form.querySelector(`[name="${f.name}"]`);
           const val = el.value.trim();
@@ -1269,6 +1280,14 @@
           data[f.name] = val;
         }
       });
+
+      if (def.requireOneOf && !def.requireOneOf.some(name => data[name])) {
+        valid = false;
+        def.requireOneOf.forEach(name => {
+          const wrap = form.querySelector(`[data-field="${name}"]`);
+          if (wrap) wrap.classList.add('error');
+        });
+      }
 
       if (!valid) return;
 
@@ -1282,6 +1301,11 @@
   /* ---------------- Custom audio player (voice memos) ---------------- */
 
   let audioIdCounter = 0;
+  let activeAudios = [];
+
+  function pauseAllAudio(){
+    activeAudios.forEach(a => { try { a.pause(); } catch(e){} });
+  }
 
   function audioPlayerHtml(){
     const id = 'ap' + (++audioIdCounter);
@@ -1305,7 +1329,9 @@
   }
 
   function wireAudioPlayer(container, url){
+    pauseAllAudio();
     const audio = new Audio(url);
+    activeAudios.push(audio);
     const btn = container.querySelector('.audio-play-btn');
     const track = container.querySelector('.audio-seek-track');
     const fill = container.querySelector('.audio-seek-fill');
@@ -1642,11 +1668,12 @@
                 <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
       case 'video':
         return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
-                <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
+                ${c.data.link ? `<a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>` : ''}
+                ${c.data.videoFile ? `<div class="ci-text">video attached</div>` : ''}`;
       case 'gift':
         return `${c.data.goodFor ? `<div class="ci-text">also good for: ${escapeHtml(c.data.goodFor)}</div>` : ''}
                 ${c.data.note ? `<div class="ci-text">${escapeHtml(c.data.note)}</div>` : ''}
-                <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
+                ${c.data.link ? `<a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>` : ''}`;
       case 'voice':
         return `<div data-voice-player="${c.key}"></div>`;
       case 'doodle':
@@ -1768,10 +1795,12 @@
         return `<div class="preview-item-title">${escapeHtml(c.data.title || 'song')}</div>
                 <a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open link</a>`;
       case 'video':
-        return `<div class="preview-video-thumb"><button type="button" class="play-btn" id="previewVideoPlay">&#9654;</button></div>
-                <a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Watch on YouTube</a>`;
+        return `${c.data.videoFile
+                  ? `<video class="preview-item-img" src="${c.data.videoFile}" controls playsinline></video>`
+                  : `<div class="preview-video-thumb"><button type="button" class="play-btn" id="previewVideoPlay">&#9654;</button></div>`}
+                ${c.data.link ? `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Watch on YouTube</a>` : ''}`;
       case 'gift':
-        return `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open gift</a>`;
+        return `${c.data.link ? `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open gift</a>` : `<div class="preview-item-caption">a little gift for you</div>`}`;
       case 'doodle':
         return `${c.data.dataUrl ? `<img class="preview-item-img" src="${c.data.dataUrl}" alt="doodle">` : ''}
                 ${c.data.caption ? `<div class="preview-item-caption">${escapeHtml(c.data.caption)}</div>` : ''}`;
@@ -1808,6 +1837,7 @@
     document.getElementById('previewOverlay').style.display = 'flex';
   }
   function closePreview(){
+    pauseAllAudio();
     if (window.location.search.includes('id=')) {
       window.location.href = window.location.origin + window.location.pathname;
     } else {
@@ -1917,7 +1947,7 @@
       showPreviewStage('open');
     }, 500);
   });
-  document.getElementById('previewBack').addEventListener('click', () => showPreviewStage('open'));
+  document.getElementById('previewBack').addEventListener('click', () => { pauseAllAudio(); showPreviewStage('open'); });
 
   renderItems();
   
