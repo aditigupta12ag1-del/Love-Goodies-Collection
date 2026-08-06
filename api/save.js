@@ -26,8 +26,8 @@ module.exports = async function handler(req, res) {
     
     const redis = await getRedisClient();
     
-    // Save to Redis, keep it for 30 days (2592000 seconds)
-    await redis.set(id, payload, { EX: 2592000 });
+    // Save to Redis, keep it for 24 hours (86400 seconds)
+    await redis.set(id, payload, { EX: 86400 });
     
     return res.status(200).json({ id });
   } catch (error) {

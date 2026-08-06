@@ -1868,7 +1868,11 @@
       inp.classList.toggle('filled', inp.value.trim().length > 0);
     });
 
-    if (openedFromLink) openPreview();
+    if (openedFromLink) {
+      // Hide the close button so the recipient cannot go back to the builder to edit
+      document.getElementById('previewClose').style.display = 'none';
+      openPreview();
+    }
   });
 </script>
 </body>
