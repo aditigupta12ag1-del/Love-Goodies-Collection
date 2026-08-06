@@ -899,6 +899,25 @@
 </style>
 </head>
 <body>
+<!-- Loading overlay shown instantly when a shared link is opened -->
+<div id="linkLoader" style="display:none;position:fixed;inset:0;z-index:9999;background:#fdf6ef;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="width:48px;height:48px;border:3px solid #e8c8a0;border-top-color:#b3854e;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <div style="font-family:'Space Mono',monospace;font-size:13px;color:#b3854e;letter-spacing:2px;">opening your gift...</div>
+</div>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+<script>
+  // Immediately hide the page if this is a shared link, before any paint
+  if (window.location.search.includes('id=')) {
+    document.addEventListener('DOMContentLoaded', function() {
+      var loader = document.getElementById('linkLoader');
+      if (loader) loader.style.display = 'flex';
+      var page = document.querySelector('.page');
+      if (page) page.style.visibility = 'hidden';
+    });
+  }
+</script>
 <div class="page">
   <div class="top-name">A LITTLE BOX OF LOVE - Made for Someone Special</div>
 
@@ -1873,7 +1892,18 @@
     });
 
     if (openedFromLink) {
+      // Hide loader and open preview directly with no flash
+      const loader = document.getElementById('linkLoader');
+      if (loader) loader.style.display = 'none';
+      const page = document.querySelector('.page');
+      if (page) page.style.visibility = '';
       openPreview();
+    } else {
+      // Normal load — ensure loader is hidden
+      const loader = document.getElementById('linkLoader');
+      if (loader) loader.style.display = 'none';
+      const page = document.querySelector('.page');
+      if (page) page.style.visibility = '';
     }
   });
 </script>
