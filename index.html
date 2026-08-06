@@ -1026,6 +1026,7 @@
   <button type="button" class="preview-close" id="previewClose">&times;</button>
 
   <div id="previewStageBox" class="preview-stage">
+    <button type="button" class="preview-back" id="previewBackToEditBox">&lsaquo; back to edit</button>
     <div class="preview-title parcel">you've got parcel</div>
     <button type="button" class="preview-box" id="previewBox">
       <img src="parcel/box.png" alt="parcel box">
@@ -1040,7 +1041,8 @@
   </div>
 
   <div id="previewStageOpen" class="preview-stage" style="display:none;">
-    <div class="preview-title small">your little box of goodies</div>
+    <button type="button" class="preview-back" id="previewBackToEditOpen">&lsaquo; back to edit</button>
+    <div class="preview-title small">your little box of Surprise</div>
     <div class="preview-scatter" id="previewScatter"></div>
     <div class="preview-credit">
       created by <a href="https://www.instagram.com/ady.tea_/" target="_blank" rel="noopener">instagram.com/ady.tea_/</a><br>
@@ -1799,6 +1801,7 @@
         return `${c.data.videoFile
                   ? `<video class="preview-item-img" src="${c.data.videoFile}" controls playsinline></video>`
                   : `<div class="preview-video-thumb"><button type="button" class="play-btn" id="previewVideoPlay">&#9654;</button></div>`}
+                ${c.data.caption ? `<div class="preview-item-caption">${escapeHtml(c.data.caption)}</div>` : ''}
                 ${c.data.link ? `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Watch on YouTube</a>` : ''}`;
       case 'gift':
         return `${c.data.link ? `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open gift</a>` : `<div class="preview-item-caption">a little gift for you</div>`}`;
@@ -1949,6 +1952,18 @@
     }, 500);
   });
   document.getElementById('previewBack').addEventListener('click', () => { pauseAllAudio(); showPreviewStage('open'); });
+
+  // "back to edit" only makes sense for the sender previewing their own
+  // package, not for a recipient opening a shared link (nothing to edit).
+  const isSharedLink = window.location.search.includes('id=');
+  ['previewBackToEditBox', 'previewBackToEditOpen'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (isSharedLink) {
+      btn.style.display = 'none';
+    } else {
+      btn.addEventListener('click', () => { pauseAllAudio(); closePreview(); });
+    }
+  });
 
   renderItems();
   
