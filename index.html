@@ -1742,7 +1742,11 @@
     document.getElementById('previewOverlay').style.display = 'flex';
   }
   function closePreview(){
-    document.getElementById('previewOverlay').style.display = 'none';
+    if (window.location.search.includes('id=')) {
+      window.location.href = window.location.origin + window.location.pathname;
+    } else {
+      document.getElementById('previewOverlay').style.display = 'none';
+    }
   }
 
   /* ---------------- Share link (Save to database) ---------------- */
@@ -1869,8 +1873,6 @@
     });
 
     if (openedFromLink) {
-      // Hide the close button so the recipient cannot go back to the builder to edit
-      document.getElementById('previewClose').style.display = 'none';
       openPreview();
     }
   });
