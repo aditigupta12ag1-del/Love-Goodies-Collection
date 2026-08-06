@@ -1080,7 +1080,7 @@
     photo: {
       title: 'Add Photo',
       fields: [
-        { name:'file', label:'Photo', kind:'file', helper:'Max file size: 5MB', required:true },
+        { name:'file', label:'Photo', kind:'file', helper:'Max file size: 3MB', maxSizeMB:3, errorMsg:'please choose a photo (under 3MB)', required:true },
         { name:'caption', label:'Caption', kind:'text', placeholder:'caption (optional)' }
       ]
     },
@@ -1095,7 +1095,7 @@
       title: 'Add Video',
       fields: [
         { name:'link', label:'Video link (YouTube, Vimeo...)', kind:'text', placeholder:'https://youtube.com/watch?v=... (optional)', errorMsg:'add a link or choose a video from your gallery below' },
-        { name:'videoFile', label:'Or choose from gallery', kind:'file', accept:'video/*', maxSizeMB:20, helper:'Max file size: 20MB', errorMsg:'please choose a video (under 20MB)' },
+        { name:'videoFile', label:'Or choose from gallery', kind:'file', accept:'video/*', maxSizeMB:3, helper:'Max file size: 3MB (for longer clips, paste a link instead)', errorMsg:'please choose a video (under 3MB), or use a link instead' },
         { name:'caption', label:'Caption', kind:'text', placeholder:'caption (optional)' }
       ],
       requireOneOf: ['link', 'videoFile']
@@ -1238,7 +1238,7 @@
     const fileDataUrls = {};
     document.querySelectorAll('#modalForm input[type="file"]').forEach(fileInput => {
       const fieldDef = def.fields.find(x => x.name === fileInput.name) || {};
-      const maxBytes = (fieldDef.maxSizeMB || 5) * 1024 * 1024;
+      const maxBytes = (fieldDef.maxSizeMB || 3) * 1024 * 1024;
       fileInput.addEventListener('change', () => {
         const file = fileInput.files[0];
         const wrap = fileInput.closest('.modal-field');
@@ -1862,7 +1862,10 @@
       body: JSON.stringify(payload)
     });
     
-    if (!res.ok) throw new Error('Failed to save');
+    if (!res.ok) {
+      if (res.status === 413) throw new Error('TOO_LARGE');
+      throw new Error('Failed to save');
+    }
     const { id } = await res.json();
     return location.origin + location.pathname + '?id=' + id;
   }
@@ -1921,7 +1924,15 @@
         msg.textContent = 'link ready below — tap it to copy';
       }
     } catch (e) {
-      msg.textContent = 'Failed to generate link. Try again.';
+      out.style.display = 'block';
+      input.value = '';
+      if (e && e.message === 'TOO_LARGE') {
+        input.placeholder = 'package too large to save';
+        msg.textContent = 'a photo or video is too big — try a smaller file or use a link instead';
+      } else {
+        input.placeholder = 'something went wrong';
+        msg.textContent = 'Failed to generate link. Check your connection and try again.';
+      }
     } finally {
       btn.textContent = originalText;
       btn.disabled = false;
