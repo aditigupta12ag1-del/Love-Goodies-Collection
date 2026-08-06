@@ -13,13 +13,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/aditigupta12ag1-del/Love-Goodies-Collection/issues"
   },
   "homepage": "https://github.com/aditigupta12ag1-del/Love-Goodies-Collection#readme",
   "dependencies": {
-    "@vercel/kv": "^3.0.0",
-    "nanoid": "^6.0.1"
+    "redis": "^6.2.0"
   }
 }
