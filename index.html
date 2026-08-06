@@ -770,23 +770,23 @@
     text-shadow: 0 2px 10px rgba(0,0,0,.18);
   }
 
+  @keyframes parcelHover {
+    0%   { transform: translateY(0) rotate(0deg); }
+    25%  { transform: translateY(-9px) rotate(-1.5deg); }
+    50%  { transform: translateY(-2px) rotate(1deg); }
+    75%  { transform: translateY(-10px) rotate(-0.5deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+  }
   .preview-box {
     position: relative;
-    width: 240px; height: 190px;
+    width: 280px;
     margin: 0 auto;
     border: none;
-    border-radius: 4px;
-    background: linear-gradient(145deg, #c9a06a, #b3854e);
-    box-shadow: 0 18px 30px rgba(0,0,0,.22), inset 0 0 0 1px rgba(0,0,0,.08);
+    background: none;
+    padding: 0;
+    animation: parcelHover 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 18px 22px rgba(0,0,0,.28));
   }
-  .preview-box::before, .preview-box::after {
-    content:"";
-    position:absolute;
-    background: rgba(255,255,255,.16);
-  }
-  .preview-box::before { top:0; left:0; right:0; height: 14px; }
-  .preview-box::after { top:0; bottom:0; left:50%; width: 14px; transform: translateX(-50%); }
-  
   @keyframes boxShake {
     0%, 100% { transform: translateX(0) rotate(0deg); }
     15% { transform: translateX(-7px) rotate(-4deg); }
@@ -797,32 +797,28 @@
     90% { transform: translateX(2px) rotate(1deg); }
   }
   .preview-box.shaking { animation: boxShake .5s ease-in-out; }
-
-  .preview-box-label {
+  .preview-box img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .preview-box-name {
     position: absolute;
-    left: 50%; top: 58%;
-    transform: translate(-50%, -50%) rotate(-1deg);
-    width: 84%;
-    background: var(--paper);
-    border: 1.3px solid var(--ink);
-    border-radius: 3px;
-    padding: 8px 10px 6px;
-    box-shadow: 3px 3px 0 rgba(0,0,0,.14);
+    left: 21%;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 8.5px;
+    color: #1c1a17;
+    letter-spacing: .3px;
+    max-width: 15%;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .preview-box-label .pbl-head {
-    background: var(--ink); color: var(--paper);
-    font-size: 8.5px; font-weight:700; letter-spacing:1px;
-    padding: 2px 4px; margin: -8px -10px 5px; text-align:center;
-  }
-  .preview-box-label .pbl-row { font-size: 9px; text-align:left; margin-bottom:2px; }
-  .preview-box-label .pbl-row b { font-size: 8px; }
-  .preview-box-label .pbl-stamp {
-    position:absolute; top:-10px; right:-8px;
-    border: 1px dashed var(--stamp); color: var(--stamp);
-    font-size: 6px; font-weight:700; padding: 3px 4px; border-radius:2px;
-    background: var(--paper); transform: rotate(8deg); line-height:1.2;
-  }
-  .preview-tap-hint { font-size: 12px; color: var(--muted); margin-top: 20px; letter-spacing:1px; }
+  .preview-box-name.to { top: 49.5%; }
+  .preview-box-name.from { top: 64%; }
+  .preview-tap-hint { font-size: 12px; color: #ffffff; margin-top: 20px; letter-spacing:1px; }
 
   .preview-scatter {
     display: flex;
@@ -999,9 +995,11 @@
   <button type="button" class="preview-close" id="previewClose">&times;</button>
 
   <div id="previewStageBox" class="preview-stage">
-    <div class="preview-title">you've got mail</div>
+    <div class="preview-title parcel">you've got parcel</div>
     <button type="button" class="preview-box" id="previewBox">
-      <div class="preview-box-label" id="previewBoxLabel"></div>
+      <img src="parcel/box.png" alt="parcel box">
+      <span class="preview-box-name to" id="previewBoxTo"></span>
+      <span class="preview-box-name from" id="previewBoxFrom"></span>
     </button>
     <div class="preview-tap-hint">tap to open</div>
   </div>
@@ -1675,15 +1673,10 @@
   /* ---------------- Recipient preview (closed box -> opened -> per-item) ---------------- */
 
   function buildPreviewBoxLabel(){
-    const to = (document.getElementById('toName').value || '').trim() || 'Special ones';
-    const from = (document.getElementById('fromName').value || '').trim() || 'Someone';
-    const el = document.getElementById('previewBoxLabel');
-    el.innerHTML = `
-      <div class="pbl-head">Digital Care Package</div>
-      <span class="pbl-stamp">care &amp;<br>love</span>
-      <div class="pbl-row"><b>TO:</b> ${escapeHtml(to)}</div>
-      <div class="pbl-row"><b>FROM:</b> ${escapeHtml(from)}</div>
-    `;
+    const to = (document.getElementById('toName').value || '').trim() || 'Cutie';
+    const from = (document.getElementById('fromName').value || '').trim() || 'Pookie';
+    document.getElementById('previewBoxTo').textContent = to;
+    document.getElementById('previewBoxFrom').textContent = from;
   }
 
   function showPreviewStage(stage){
