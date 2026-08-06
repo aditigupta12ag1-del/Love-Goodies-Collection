@@ -1,5 +1,15 @@
-import { kv } from '@vercel/kv';
+import { createClient } from 'redis';
 import { nanoid } from 'nanoid';
+
+let client;
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({ url: process.env.REDIS_URL });
+    client.on('error', (err) => console.log('Redis Client Error', err));
+    await client.connect();
+  }
+  return client;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,15 +18,13 @@ export default async function handler(req, res) {
 
   try {
     const { to, from, cart } = req.body;
-    
-    // Generate a unique 8-character ID
     const id = nanoid(8);
+    const payload = JSON.stringify({ to, from, cart });
     
-    const payload = { to, from, cart };
+    const redis = await getRedisClient();
     
-    // Save to Vercel KV, keep it for 30 days
-    // 30 days = 30 * 24 * 60 * 60 = 2592000 seconds
-    await kv.set(id, payload, { ex: 2592000 });
+    // Save to Redis, keep it for 30 days (2592000 seconds)
+    await redis.set(id, payload, { EX: 2592000 });
     
     return res.status(200).json({ id });
   } catch (error) {
