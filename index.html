@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#F7F1E6">
+<title>digital care package</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fdfbf4;
+    --paper-edge:#e9e2d0;
+    --ink:#1c1a17;
+    --stamp:#b5453c;
+    --kraft:#c9a978;
+    --kraft-dark:#b3925f;
+    --muted:#8a8271;
+    --line:#1c1a17;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin:0;
+    padding:0;
+    background: #DAA064;
+    color: var(--ink);
+    font-family: 'Space Mono', 'Courier New', monospace;
+    min-height:100vh;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="34" viewBox="0 0 28 34"><g fill="%23fdfbf4" stroke="%231c1a17" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9.4 15.2V4.6a2.6 2.6 0 0 1 5.2 0v10.2"/><path d="M6.2 16.2c-1.4-1.6-3-1.9-3.9-.9-.8.9-.6 2.1.5 3.3l4.3 4.7c1.8 4.6 5.4 7.2 10.4 7.2 5.7 0 9.5-3.8 9.5-9.9v-4.4c0-1.6-1.2-2.8-2.7-2.8-1.4 0-2.6 1.1-2.7 2.6-.1-1.5-1.3-2.6-2.7-2.6-1.4 0-2.6 1.1-2.7 2.6v-.4c0-1.6-1.2-2.8-2.7-2.8-1.4 0-2.6 1.1-2.7 2.6v-2.8"/></g></svg>') 9 3, pointer;
+  }
+
+  a, button, input, textarea, .item, .stamp, .qty-btn { cursor: inherit; }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 28px 16px 80px;
+  }
+
+  .top-name {
+    text-align:center;
+    font-size:11px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color: #5C4F3E;
+    margin-bottom: 22px;
+    opacity:0.75;
+  }
+
+  .layout {
+    display:flex;
+    gap: 28px;
+    align-items:flex-start;
+    flex-wrap: wrap;
+    justify-content:center;
+  }
+
+  .col-label { flex: 0 0 340px; max-width:100%; }
+  .col-card { flex: 0 0 420px; max-width:100%; }
+
+  /* ---------- Shipping label ---------- */
+  .label-card {
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    box-shadow: 5px 5px 0 rgba(0,0,0,0.12);
+    position:relative;
+    transform: rotate(-1.2deg);
+  }
+  .label-head {
+    background: var(--ink);
+    color: var(--paper);
+    text-align:center;
+    font-weight:700;
+    letter-spacing:2px;
+    font-size: 15px;
+    padding: 10px 8px;
+    text-transform:uppercase;
+  }
+  .label-body { padding: 18px 20px 14px; position:relative; }
+  .label-row { margin-bottom: 14px; }
+  .label-row .k {
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    display:block;
+    margin-bottom:6px;
+  }
+  .label-row input {
+    border:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:18px;
+    color:#9a9384;
+    width:100%;
+    outline:none;
+    font-style:italic;
+  }
+  .label-row input:focus, .label-row input.filled { color: var(--ink); font-style:normal; }
+  .label-divider {
+    border-top: 1px dashed #9a9384;
+    margin: 10px 0 16px;
+  }
+  .stamp {
+    position:absolute;
+    top: 10px;
+    right: 16px;
+    border: 1.4px dashed var(--stamp);
+    color: var(--stamp);
+    font-size: 10.5px;
+    font-weight:700;
+    line-height:1.35;
+    text-align:center;
+    padding: 7px 10px;
+    border-radius: 3px;
+    transform: rotate(9deg);
+    opacity:0.85;
+    max-width: 118px;
+  }
+  .label-barcode-wrap {
+    border-top: 1.6px solid var(--ink);
+    padding: 12px 20px 16px;
+    text-align:center;
+  }
+  .barcode { height: 46px; width:100%; }
+  .barcode-num {
+    font-size: 12px;
+    letter-spacing: 3px;
+    margin-top: 6px;
+  }
+
+  /* ---------- Receipt card ---------- */
+  .receipt {
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.12);
+    padding: 22px 22px 10px;
+    position:relative;
+    margin-top: 6px;
+  }
+  .receipt::after{
+    content:"";
+    display:block;
+    height:14px;
+    margin: 0 -22px;
+    background-image: radial-gradient(circle at 10px 0, transparent 7px, var(--kraft) 7.5px);
+    background-size: 20px 14px;
+    background-position: 0 -7px;
+  }
+  .r-title {
+    text-align:center;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:1px;
+    margin-bottom:2px;
+  }
+  .r-sub {
+    text-align:center;
+    font-size:10.5px;
+    color: var(--muted);
+    margin-bottom:14px;
+    letter-spacing:.5px;
+  }
+  .r-stamp-wrap { text-align:center; margin-bottom:14px; }
+  .r-stamp {
+    display:inline-block;
+    border: 1.4px dashed var(--stamp);
+    color: var(--stamp);
+    font-weight:700;
+    font-size:15px;
+    padding: 7px 18px;
+    border-radius: 3px;
+    transform: rotate(-2deg);
+  }
+  .r-select-label {
+    text-align:center;
+    font-size:10.5px;
+    letter-spacing:2px;
+    margin-bottom:12px;
+  }
+  .r-divider-thick {
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    height:3px;
+    margin-bottom: 4px;
+  }
+  .r-row-head {
+    display:flex;
+    justify-content:space-between;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    padding: 8px 2px 6px;
+    border-bottom: 1px dashed #9a9384;
+    margin-bottom: 14px;
+  }
+
+  .item-grid {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 12px;
+    margin-bottom: 10px;
+  }
+  .item {
+    text-align:center;
+    background:none;
+    border:none;
+    padding:6px 4px 10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    position:relative;
+  }
+  .item-img-wrap {
+    width: 108px;
+    height: 108px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .item img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(2px 3px 3px rgba(0,0,0,0.12));
+    transition: transform .3s ease, filter .3s ease;
+    transform-origin: 50% 55%;
+  }
+  .item:hover img {
+    transform: rotate(-6deg);
+    filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.12)) drop-shadow(3px 7px 9px rgba(0,0,0,0.18));
+  }
+  .item:nth-child(2n):hover img { transform: rotate(6deg); }
+  @keyframes floaty {
+    0%   { transform: translateY(0) rotate(0deg); }
+    25%  { transform: translateY(-7px) rotate(-3deg); }
+    50%  { transform: translateY(-1px) rotate(2deg); }
+    75%  { transform: translateY(-8px) rotate(-1deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+  }
+  .item.selected .item-img-wrap { animation: floaty 2.6s ease-in-out infinite; }
+  .item.selected:nth-child(2n) .item-img-wrap { animation-duration: 2.9s; animation-delay: -.6s; }
+  .item .label {
+    font-size: 12.5px;
+    font-weight:700;
+    letter-spacing:.5px;
+  }
+  .item .label::before { content:"+ "; }
+  .item.selected .label::before { content:"✓ "; color:#3f7a4d; }
+
+  .r-divider {
+    border-top: 1px dashed #9a9384;
+    margin: 6px 0 14px;
+  }
+
+  .cart-empty {
+    text-align:center;
+    font-size:11.5px;
+    color: var(--muted);
+    padding: 10px 0 18px;
+    font-style:italic;
+  }
+  .cart-item {
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding: 10px 0;
+    border-bottom: 1px dashed #d8d1bd;
+  }
+  .cart-item img {
+    width: 42px;
+    height: 42px;
+    object-fit:contain;
+    filter: drop-shadow(1px 2px 2px rgba(0,0,0,0.15));
+    flex-shrink:0;
+  }
+  .cart-item .ci-main { flex:1; min-width:0; }
+  .cart-item .ci-title {
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  .cart-item textarea {
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:12.5px;
+    color:#55503f;
+    resize:none;
+    outline:none;
+    line-height:1.4;
+  }
+  .remove-btn {
+    border: 1.2px solid var(--stamp);
+    color: var(--stamp);
+    background:transparent;
+    font-family:inherit;
+    font-size:10px;
+    letter-spacing:1px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    align-self:flex-start;
+    white-space:nowrap;
+  }
+  .remove-btn:hover { background: var(--stamp); color:var(--paper); }
+
+  .r-footer {
+    text-align:center;
+    padding: 18px 0 6px;
+  }
+  .r-footer .barcode { height:38px; margin-bottom:6px; }
+  .r-footer .thanks {
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:1.5px;
+  }
+  .r-footer .nice {
+    font-size:11px;
+    color: var(--muted);
+    margin-top:2px;
+  }
+
+  .credit {
+    text-align:center;
+    font-size:10px;
+    color:#6b5f47;
+    margin-top: 26px;
+    opacity:.8;
+  }
+  .credit a { color:#6b5f47; }
+
+  @media (max-width: 800px) {
+    .layout { flex-direction:column; align-items:center; }
+    .col-label, .col-card { flex-basis:auto; width:100%; max-width:420px; }
+  }
+  @media (max-width: 480px) {
+    .page { padding: 18px 10px 60px; }
+    .item-img-wrap { width:88px; height:88px; }
+    .r-title { font-size:14px; }
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(28,26,23,0.35);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 20px;
+    z-index: 1000;
+    opacity:0;
+    animation: modalFadeIn .18s ease forwards;
+  }
+  @keyframes modalFadeIn { to { opacity:1; } }
+  .modal-card {
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.16);
+    width: 100%;
+    max-width: 440px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 26px 26px 22px;
+    position: relative;
+    transform: translateY(10px) scale(.98);
+    animation: modalPop .2s ease forwards;
+  }
+  @keyframes modalPop { to { transform: translateY(0) scale(1); } }
+  .modal-close {
+    position:absolute;
+    top: 14px;
+    right: 16px;
+    background:none;
+    border:none;
+    font-size: 20px;
+    line-height:1;
+    color: var(--ink);
+    padding: 4px;
+  }
+  .modal-title {
+    color: var(--stamp);
+    font-weight:700;
+    font-size: 17px;
+    letter-spacing:1px;
+    margin: 0 0 18px;
+    text-transform:uppercase;
+  }
+  .modal-field { margin-bottom: 16px; }
+  .modal-field label {
+    display:block;
+    font-size: 12px;
+    color: #5a5142;
+    margin-bottom: 7px;
+  }
+  .modal-field input[type="text"],
+  .modal-field input[type="url"],
+  .modal-field textarea {
+    width: 100%;
+    border: 1.3px solid #c9c1ab;
+    border-radius: 8px;
+    background: #fffdf8;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    padding: 10px 12px;
+    outline:none;
+    resize: vertical;
+  }
+  .modal-field input:focus, .modal-field textarea:focus { border-color: var(--stamp); }
+  .modal-field textarea { min-height: 84px; line-height:1.5; }
+  .modal-field.error input, .modal-field.error textarea { border-color: var(--stamp); }
+  .modal-field .field-err {
+    display:none;
+    color: var(--stamp);
+    font-size: 10.5px;
+    margin-top: 5px;
+  }
+  .modal-field.error .field-err { display:block; }
+  .modal-field .helper {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .file-row {
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 1.3px solid #c9c1ab;
+    border-radius: 8px;
+    background: #fffdf8;
+    padding: 9px 12px;
+  }
+  .file-row input[type="file"] { font-family: inherit; font-size: 12.5px; max-width: 100%; }
+  .file-row .file-name { font-size:12px; color: var(--muted); }
+
+  .modal-actions { display:flex; gap:10px; margin-top: 6px; flex-wrap:wrap; }
+  .btn-primary, .btn-secondary {
+    font-family: inherit;
+    font-weight:700;
+    font-size: 13px;
+    padding: 11px 18px;
+    border-radius: 8px;
+    background: #f2e2d8;
+  }
+  .btn-primary { border: 1.4px solid var(--stamp); color: var(--stamp); }
+  .btn-primary:hover { background: var(--stamp); color: var(--paper); }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; background:#f2e2d8; color:var(--stamp); }
+  .btn-secondary { border: 1.4px solid #d8d1bd; color: var(--ink); background: var(--paper); }
+  .btn-secondary:hover { background: #f1ece0; }
+
+  .thumb-preview {
+    margin-top: 10px;
+    max-width: 140px;
+    max-height: 140px;
+    border-radius: 8px;
+    border: 1.3px solid #c9c1ab;
+    display:none;
+  }
+  .thumb-preview.show { display:block; }
+
+  .voice-track {
+    height: 60px;
+    border-radius: 12px;
+    border: 1.3px dashed #d8a9a2;
+    background: linear-gradient(180deg,#fbebe8,#f6dcd7);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom: 12px;
+    overflow:hidden;
+    position:relative;
+    padding: 0 14px;
+  }
+  .voice-track audio { width:92%; }
+  .voice-bars {
+    display:flex;
+    align-items:center;
+    gap: 4px;
+    width:100%;
+    height: 100%;
+  }
+  .voice-bars .vb {
+    flex:1;
+    min-width: 3px;
+    max-width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background: #d8a9a2;
+    transition: height .15s ease, background .15s ease;
+  }
+  .voice-track.recording .vb {
+    background: linear-gradient(180deg, var(--stamp), #8f2f27);
+    animation: voiceBar .9s ease-in-out infinite;
+  }
+  .voice-track.recording .vb:nth-child(1) { animation-duration: .7s; animation-delay: 0s; }
+  .voice-track.recording .vb:nth-child(2) { animation-duration: .85s; animation-delay: .05s; }
+  .voice-track.recording .vb:nth-child(3) { animation-duration: .65s; animation-delay: .1s; }
+  .voice-track.recording .vb:nth-child(4n) { animation-duration: .8s; animation-delay: .15s; }
+  .voice-track.recording .vb:nth-child(4n+1) { animation-duration: .95s; animation-delay: .2s; }
+  .voice-track.recording .vb:nth-child(4n+2) { animation-duration: .7s; animation-delay: .12s; }
+  .voice-track.recording .vb:nth-child(4n+3) { animation-duration: .88s; animation-delay: .07s; }
+  @keyframes voiceBar {
+    0%   { height: 8px; }
+    50%  { height: 38px; }
+    100% { height: 8px; }
+  }
+  .voice-rec-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size: 12px;
+    font-weight:700;
+    color: var(--stamp);
+    letter-spacing: 1px;
+    margin: 0 0 12px;
+  }
+  .voice-rec-row .voice-rec-dot {
+    display:inline-block;
+    margin-right: 5px;
+    animation: voiceDot 1s ease-in-out infinite;
+  }
+  @keyframes voiceDot { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+  .voice-status { font-size: 12px; color: var(--muted); margin: 8px 0 16px; }
+  .voice-status.recording { color: var(--stamp); font-weight:700; }
+  .record-btn.recording { background: var(--stamp); color: var(--paper); }
+
+  .doodle-canvas-wrap {
+    border: 1.3px solid #c9c1ab;
+    border-radius: 10px;
+    overflow:hidden;
+    margin-bottom: 12px;
+    background:#fdf7ef;
+    touch-action: none;
+  }
+  .doodle-canvas-wrap canvas { display:block; width:100%; height: 220px; cursor: crosshair; }
+  .doodle-colorbar {
+    position: relative;
+    height: 28px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    background: linear-gradient(to right,
+      #ff0000, #ff8a00, #ffee00, #4dff00, #00ffd5, #0066ff, #7b00ff, #ff00c8, #ff0000);
+    border: 1.3px solid #c9c1ab;
+    cursor: pointer;
+    touch-action: none;
+  }
+  .doodle-colorbar-handle {
+    position: absolute;
+    top: 50%;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 1.3px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.25);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .doodle-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom: 16px; }
+  .brush-btn, .clear-btn {
+    font-family:inherit; font-size:11px; font-weight:700;
+    padding: 6px 10px; border-radius:6px;
+    border: 1.2px solid #c9c1ab; background:var(--paper); color: var(--ink);
+  }
+  .brush-btn.active { border-color: var(--stamp); color: var(--stamp); background:#f2e2d8; }
+  .clear-btn { border-color: var(--stamp); color: var(--stamp); margin-left:auto; }
+
+  .cart-item .ci-text { font-size:12.5px; color:#55503f; line-height:1.4; margin-bottom:4px; }
+  .cart-item .ci-link { font-size:12px; color:#3a5fa0; word-break:break-all; }
+  .cart-item .ci-thumb { width:100%; max-width:120px; border-radius:6px; border:1px solid #d8d1bd; margin-top:6px; display:block; }
+  .cart-item audio { width:100%; max-width:220px; margin-top:6px; }
+
+  @media (max-width: 600px) {
+    .modal-overlay { align-items:flex-end; padding:0; }
+    .modal-card {
+      max-width: 100%;
+      max-height: 92vh;
+      border-radius: 16px 16px 0 0;
+      border-bottom: none;
+      transform: translateY(24px);
+    }
+    .doodle-canvas-wrap canvas { height: 260px; }
+  }
+
+  /* ---------- Flowers gallery (horizontal scroll) ---------- */
+  .bq-subtitle { font-size: 12px; color:#5a5142; margin: -10px 0 16px; }
+  .bq-gallery {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 4px 2px 10px;
+    margin-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bq-gallery::-webkit-scrollbar { height: 5px; }
+  .bq-gallery::-webkit-scrollbar-thumb { background:#d8d1bd; border-radius:3px; }
+  .bq-card {
+    flex: 0 0 auto;
+    width: 106px;
+    border: 1.6px solid #d8d1bd;
+    border-radius: 10px;
+    background: #fffdf8;
+    padding: 8px 6px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .bq-card-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .bq-card-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .bq-card-name { font-size: 10.5px; color:#5a5142; }
+  .bq-card.active {
+    border-color: var(--stamp);
+    box-shadow: 0 0 0 2px rgba(181,69,60,.18);
+  }
+  .bq-card.active .bq-card-name { color: var(--stamp); font-weight:700; }
+
+  /* ---------- Custom audio player (voice memo) ---------- */
+  .audio-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(180deg,#fbebe8,#f6dcd7);
+    border: 1.3px solid #d8a9a2;
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  .audio-play-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--stamp);
+    color: var(--paper);
+    border: none;
+    font-size: 13px;
+    display: flex; align-items:center; justify-content:center;
+    flex-shrink: 0;
+    padding: 0 0 0 2px;
+  }
+  .audio-play-btn.playing { padding: 0; }
+  .audio-seek-track {
+    position: relative;
+    flex: 1;
+    height: 5px;
+    background: #e3c3bd;
+    border-radius: 3px;
+    cursor: pointer;
+    touch-action: none;
+  }
+  .audio-seek-fill {
+    position: absolute; left:0; top:0; bottom:0;
+    width: 0%;
+    background: var(--stamp);
+    border-radius: 3px;
+  }
+  .audio-seek-handle {
+    position: absolute;
+    top: 50%; left: 0%;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--stamp);
+    border: 2px solid var(--paper);
+    box-shadow: 0 1px 2px rgba(0,0,0,.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .audio-time {
+    font-size: 10.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ---------- Checkout / send card ---------- */
+  .checkout-card {
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.12);
+    padding: 20px 22px 18px;
+    margin-top: 24px;
+    text-align: center;
+  }
+  .checkout-title { font-weight:700; font-size:15px; letter-spacing:.5px; }
+  .checkout-sub { font-size: 11px; color: var(--muted); margin-top:2px; letter-spacing:.5px; }
+  .checkout-stamp-wrap { margin: 16px 0; }
+  .checkout-stamp {
+    display:inline-block;
+    border: 1.4px dashed var(--stamp);
+    color: var(--stamp);
+    font-weight:700;
+    font-size:14px;
+    padding: 7px 18px;
+    border-radius: 3px;
+    transform: rotate(-2deg);
+  }
+  .checkout-select-label { font-size:10.5px; letter-spacing:1.5px; color: var(--muted); margin-bottom:14px; }
+  .checkout-divider { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink); height:3px; margin-bottom: 16px; }
+  .checkout-actions { display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; }
+  .checkout-actions .btn-primary, .checkout-actions .btn-secondary { width:100%; padding: 13px 18px; }
+  .checkout-footer { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+  /* ---------- Recipient preview overlay ---------- */
+  .preview-overlay {
+    position: fixed; inset:0;
+    background: #DAA064;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    animation: modalFadeIn .2s ease forwards;
+  }
+  .preview-close {
+    position: absolute;
+    top: 18px; right: 20px;
+    background: var(--paper);
+    border: 1.3px solid var(--ink);
+    border-radius: 50%;
+    width: 34px; height: 34px;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .preview-stage { width:100%; max-width: 440px; text-align:center; }
+  .preview-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--stamp);
+    margin-bottom: 34px;
+  }
+  .preview-title.small { font-size: 22px; margin-bottom: 22px; }
+
+  .preview-box {
+    position: relative;
+    width: 240px; height: 190px;
+    margin: 0 auto;
+    border: none;
+    border-radius: 4px;
+    background: linear-gradient(145deg, #c9a06a, #b3854e);
+    box-shadow: 0 18px 30px rgba(0,0,0,.22), inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .preview-box::before, .preview-box::after {
+    content:"";
+    position:absolute;
+    background: rgba(255,255,255,.16);
+  }
+  .preview-box::before { top:0; left:0; right:0; height: 14px; }
+  .preview-box::after { top:0; bottom:0; left:50%; width: 14px; transform: translateX(-50%); }
+  .preview-box-label {
+    position: absolute;
+    left: 50%; top: 58%;
+    transform: translate(-50%, -50%) rotate(-1deg);
+    width: 84%;
+    background: var(--paper);
+    border: 1.3px solid var(--ink);
+    border-radius: 3px;
+    padding: 8px 10px 6px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.14);
+  }
+  .preview-box-label .pbl-head {
+    background: var(--ink); color: var(--paper);
+    font-size: 8.5px; font-weight:700; letter-spacing:1px;
+    padding: 2px 4px; margin: -8px -10px 5px; text-align:center;
+  }
+  .preview-box-label .pbl-row { font-size: 9px; text-align:left; margin-bottom:2px; }
+  .preview-box-label .pbl-row b { font-size: 8px; }
+  .preview-box-label .pbl-stamp {
+    position:absolute; top:-10px; right:-8px;
+    border: 1px dashed var(--stamp); color: var(--stamp);
+    font-size: 6px; font-weight:700; padding: 3px 4px; border-radius:2px;
+    background: var(--paper); transform: rotate(8deg); line-height:1.2;
+  }
+  .preview-tap-hint { font-size: 12px; color: var(--muted); margin-top: 20px; letter-spacing:1px; }
+
+  .preview-scatter {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px 34px;
+    margin-top: 10px;
+  }
+  .preview-scatter-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: none;
+    animation: floaty 2.6s ease-in-out infinite;
+  }
+  .preview-scatter-item:nth-child(2n) { animation-duration: 3.1s; animation-delay: -.7s; }
+  .preview-scatter-item:nth-child(3n) { animation-duration: 2.3s; animation-delay: -1.4s; }
+  .preview-scatter-item img { width: 64px; height:64px; object-fit:contain; filter: drop-shadow(2px 4px 5px rgba(0,0,0,.16)); }
+  .preview-scatter-item .pill {
+    background: var(--paper);
+    border: 1.3px solid var(--stamp);
+    color: var(--stamp);
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .preview-item-card {
+    background: var(--paper);
+    border: 1.6px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.16);
+    padding: 22px;
+    text-align: center;
+  }
+  .preview-back {
+    display:block;
+    margin: 0 0 16px;
+    background:none; border:none;
+    font-size: 12px; color: var(--muted);
+    text-align:left;
+  }
+  .preview-item-title { font-weight:700; font-size:13px; margin-bottom:14px; }
+  .preview-item-text { font-size: 15px; font-style:italic; padding: 10px 0; }
+  .preview-item-img { max-width: 100%; max-height: 260px; border-radius: 8px; border:1.3px solid #d8d1bd; }
+  .preview-item-caption { font-size: 12px; color: var(--muted); margin-top:10px; }
+  .preview-video-thumb {
+    position: relative;
+    background: #111;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    aspect-ratio: 16/10;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .preview-video-thumb .play-btn {
+    width: 54px; height:54px; border-radius:50%;
+    background: #e6231f; color:#fff; border:none;
+    font-size: 20px; display:flex; align-items:center; justify-content:center;
+  }
+  .preview-link-btn {
+    display:inline-block;
+    border: 1.4px solid var(--stamp); color: var(--stamp);
+    background: #f2e2d8;
+    font-family: inherit; font-weight:700; font-size: 13px;
+    padding: 11px 22px; border-radius: 8px;
+  }
+
+  @media (min-width: 420px) {
+    .bq-card { width: 118px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-name">A LITTLE BOX OF LOVE - Made for Someone Special</div>
+
+  <div class="layout">
+    <!-- Shipping label -->
+    <div class="col-label">
+      <div class="label-card">
+        <div class="label-head">Digital Care Package</div>
+        <div class="label-body">
+          <span class="stamp">to be delivered<br>with care and love</span>
+          <div class="label-row">
+            <span class="k">TO:</span>
+            <input type="text" placeholder="Special ones" id="toName">
+          </div>
+          <div class="label-divider"></div>
+          <div class="label-row" style="margin-bottom:0;">
+            <span class="k">FROM:</span>
+            <input type="text" placeholder="Someone" id="fromName">
+          </div>
+        </div>
+        <div class="label-barcode-wrap">
+          <svg class="barcode" id="labelBarcode"></svg>
+          <div class="barcode-num" id="labelBarcodeNum"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipt / item picker -->
+    <div class="col-card">
+      <div class="receipt">
+        <div class="r-title">Collection of love</div>
+        <div class="r-sub">little treasures, lasting memories</div>
+
+        <div class="r-stamp-wrap"><span class="r-stamp">things to add in package</span></div>
+        <div class="r-select-label">*** SELECT ITEMS FOR YOUR LOVED ONES ***</div>
+
+        <div class="r-divider-thick"></div>
+        <div class="r-row-head"><span>ITEM</span><span>ADD</span></div>
+
+        <div class="item-grid" id="itemGrid">
+          <!-- items injected by JS -->
+        </div>
+
+        <div class="r-divider"></div>
+        <div class="r-row-head" style="margin-bottom:0;"><span>IN CART</span><span>QTY</span></div>
+        <div id="cartList"></div>
+
+        <div class="r-footer">
+          <svg class="barcode" id="cartBarcode"></svg>
+          <div class="thanks">THANK YOU FOR CARING</div>
+          <div class="nice">have a nice day :)</div>
+        </div>
+      </div>
+
+      <div class="checkout-card">
+        <div class="checkout-title">A Little Box of Goodies</div>
+        <div class="checkout-sub">checkout · share your parcel</div>
+        <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
+        <div class="checkout-select-label">*** GET YOUR LINK ***</div>
+        <div class="checkout-divider"></div>
+        <div class="checkout-actions">
+          <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
+          <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
+        </div>
+        <svg class="barcode" id="checkoutBarcode"></svg>
+        <div class="checkout-footer">send it to someone special</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+
+<div id="previewOverlay" class="preview-overlay" style="display:none;">
+  <button type="button" class="preview-close" id="previewClose">&times;</button>
+
+  <div id="previewStageBox" class="preview-stage">
+    <div class="preview-title">you've got mail</div>
+    <button type="button" class="preview-box" id="previewBox">
+      <div class="preview-box-label" id="previewBoxLabel"></div>
+    </button>
+    <div class="preview-tap-hint">tap to open</div>
+  </div>
+
+  <div id="previewStageOpen" class="preview-stage" style="display:none;">
+    <div class="preview-title small">your little box of goodies</div>
+    <div class="preview-scatter" id="previewScatter"></div>
+  </div>
+
+  <div id="previewStageItem" class="preview-stage" style="display:none;">
+    <button type="button" class="preview-back" id="previewBack">&lsaquo; back</button>
+    <div class="preview-item-card" id="previewItemCard"></div>
+  </div>
+</div>
+
+<script>
+  const ITEMS = [
+    { key:'song',    label:'Song',    img:'img/cassette.png',   type:'song'   },
+    { key:'flower',  label:'Flowers', img:'img/bouquet.png',    type:'flower', defaultText:'flowers for u' },
+    { key:'voice',   label:'Voice',   img:'img/recorder.png',   type:'voice'  },
+    { key:'photo',   label:'Photo',   img:'img/polaroid.png',   type:'photo'  },
+    { key:'note',    label:'Notes',   img:'img/typewriter.png', type:'note'   },
+    { key:'video',   label:'Video',   img:'img/handycam.png',   type:'video'  },
+    { key:'doodle',  label:'Doodle',  img:'img/pencil.png',     type:'doodle' },
+    { key:'gift',    label:'Gift',    img:'img/giftcard.png',   type:'gift'   },
+  ];
+
+  // field-based modal definitions (note / photo / song / video / gift).
+  // voice and doodle get their own custom builders below.
+  const MODAL_DEFS = {
+    note: {
+      title: 'Add Note',
+      fields: [
+        { name:'text', label:'Note', kind:'textarea', placeholder:'write something...', required:true }
+      ]
+    },
+    photo: {
+      title: 'Add Photo',
+      fields: [
+        { name:'file', label:'Photo', kind:'file', helper:'Max file size: 5MB', required:true },
+        { name:'caption', label:'Caption', kind:'text', placeholder:'caption (optional)' }
+      ]
+    },
+    song: {
+      title: 'Add Song',
+      fields: [
+        { name:'link', label:'Song link (Spotify, Apple Music, YouTube Music...)', kind:'text', placeholder:'https://open.spotify.com/track/...', required:true },
+        { name:'title', label:'Title', kind:'text', placeholder:'song title (optional)' }
+      ]
+    },
+    video: {
+      title: 'Add Video',
+      fields: [
+        { name:'link', label:'Video link (YouTube, Vimeo...)', kind:'text', placeholder:'https://youtube.com/watch?v=...', required:true },
+        { name:'caption', label:'Caption', kind:'text', placeholder:'caption (optional)' }
+      ]
+    },
+    gift: {
+      title: 'Add Gift',
+      fields: [
+        { name:'goodFor', label:'This gift card is also good for', kind:'text', placeholder:'one movie night / one free hug / one vent call' },
+        { name:'link', label:'Gift card / e-gift link', kind:'text', placeholder:'https://...', required:true },
+        { name:'note', label:'Note', kind:'textarea', placeholder:'a note to go with it (optional)' }
+      ]
+    }
+  };
+
+  const cart = [];
+  let mediaRecorder = null, recordedChunks = [], recordedUrl = null;
+  let doodleCtx = null, doodleColor = '#1c1a17', doodleSize = 5, doodleDrawing = false;
+
+  function renderItems(){
+    const grid = document.getElementById('itemGrid');
+    grid.innerHTML = ITEMS.map(it => `
+      <button type="button" class="item" data-key="${it.key}">
+        <div class="item-img-wrap">
+          <img src="${it.img}" alt="${it.label}">
+        </div>
+        <span class="label">${it.label}</span>
+      </button>
+    `).join('');
+    grid.querySelectorAll('.item').forEach(btn => {
+      btn.addEventListener('click', () => openModal(btn.dataset.key));
+    });
+    syncGridSelection();
+  }
+
+  function syncGridSelection(){
+    document.querySelectorAll('.item').forEach(btn => {
+      btn.classList.toggle('selected', !!cart.find(c => c.key === btn.dataset.key));
+    });
+  }
+
+  function upsertCart(key, entry){
+    const idx = cart.findIndex(c => c.key === key);
+    if (idx > -1) cart[idx] = entry; else cart.push(entry);
+    syncGridSelection();
+    renderCart();
+  }
+
+  function removeFromCart(key){
+    const idx = cart.findIndex(c => c.key === key);
+    if (idx > -1) cart.splice(idx, 1);
+    syncGridSelection();
+    renderCart();
+  }
+
+  /* ---------------- Modal shell ---------------- */
+
+  function closeModal(){
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = '';
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    mediaRecorder = null; recordedChunks = []; doodleCtx = null;
+  }
+
+  function modalShell(key, title, bodyHtml){
+    const root = document.getElementById('modalRoot');
+    root.innerHTML = `
+      <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card" role="dialog" aria-modal="true">
+          <button type="button" class="modal-close" id="modalClose">&times;</button>
+          <div class="modal-title">${title}</div>
+          <form id="modalForm">
+            ${bodyHtml}
+            <div class="modal-actions">
+              <button type="submit" class="btn-primary">Add to package</button>
+              <button type="button" class="btn-secondary" id="modalCancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'modalOverlay') closeModal();
+    });
+    document.addEventListener('keydown', escCloseOnce);
+  }
+
+  function escCloseOnce(e){
+    if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escCloseOnce); }
+  }
+
+  function openModal(key){
+    const item = ITEMS.find(i => i.key === key);
+    if (!item) return;
+    if (item.type === 'voice') { openVoiceModal(item); return; }
+    if (item.type === 'doodle') { openDoodleModal(item); return; }
+    if (item.type === 'flower') { openFlowerModal(item); return; }
+    openFieldModal(item);
+  }
+
+  /* ---------------- Field-based modals (note/photo/song/video/gift) ---------------- */
+
+  function fieldHtml(f){
+    if (f.kind === 'textarea') {
+      return `<div class="modal-field" data-field="${f.name}">
+        <label>${f.label}</label>
+        <textarea name="${f.name}" placeholder="${f.placeholder||''}"></textarea>
+        <div class="field-err">this field is required</div>
+      </div>`;
+    }
+    if (f.kind === 'file') {
+      return `<div class="modal-field" data-field="${f.name}">
+        <label>${f.label}</label>
+        <div class="file-row">
+          <input type="file" name="${f.name}" accept="image/*">
+        </div>
+        <div class="helper">${f.helper||''}</div>
+        <div class="field-err">please choose a photo (under 5MB)</div>
+        <img class="thumb-preview" id="photoPreview" alt="preview">
+      </div>`;
+    }
+    return `<div class="modal-field" data-field="${f.name}">
+      <label>${f.label}</label>
+      <input type="text" name="${f.name}" placeholder="${f.placeholder||''}">
+      <div class="field-err">this field is required</div>
+    </div>`;
+  }
+
+  function openFieldModal(item){
+    const def = MODAL_DEFS[item.type];
+    modalShell(item.key, def.title, def.fields.map(fieldHtml).join(''));
+
+    let photoDataUrl = null;
+    const fileInput = document.querySelector('#modalForm input[type="file"]');
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        const wrap = fileInput.closest('.modal-field');
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+          wrap.classList.add('error');
+          photoDataUrl = null;
+          return;
+        }
+        wrap.classList.remove('error');
+        const reader = new FileReader();
+        reader.onload = () => {
+          photoDataUrl = reader.result;
+          const preview = document.getElementById('photoPreview');
+          preview.src = photoDataUrl;
+          preview.classList.add('show');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById('modalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {};
+      let valid = true;
+
+      def.fields.forEach(f => {
+        const wrap = form.querySelector(`[data-field="${f.name}"]`);
+        if (f.kind === 'file') {
+          if (f.required && !photoDataUrl) { wrap.classList.add('error'); valid = false; }
+          else wrap.classList.remove('error');
+          data.file = photoDataUrl;
+        } else {
+          const el = form.querySelector(`[name="${f.name}"]`);
+          const val = el.value.trim();
+          if (f.required && !val) { wrap.classList.add('error'); valid = false; }
+          else wrap.classList.remove('error');
+          data[f.name] = val;
+        }
+      });
+
+      if (!valid) return;
+
+      upsertCart(item.key, { key:item.key, label:item.label, img:item.img, type:item.type, data });
+      closeModal();
+    });
+  }
+
+  /* ---------------- Voice modal ---------------- */
+
+  /* ---------------- Custom audio player (voice memos) ---------------- */
+
+  let audioIdCounter = 0;
+
+  function audioPlayerHtml(){
+    const id = 'ap' + (++audioIdCounter);
+    return { id, html: `
+      <div class="audio-player" data-audio-id="${id}">
+        <button type="button" class="audio-play-btn">&#9654;</button>
+        <div class="audio-seek-track">
+          <div class="audio-seek-fill"></div>
+          <div class="audio-seek-handle"></div>
+        </div>
+        <span class="audio-time">0:00 / 0:00</span>
+      </div>
+    `};
+  }
+
+  function fmtTime(s){
+    if (!isFinite(s) || s < 0) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  function wireAudioPlayer(container, url){
+    const audio = new Audio(url);
+    const btn = container.querySelector('.audio-play-btn');
+    const track = container.querySelector('.audio-seek-track');
+    const fill = container.querySelector('.audio-seek-fill');
+    const handle = container.querySelector('.audio-seek-handle');
+    const timeEl = container.querySelector('.audio-time');
+
+    function updateUI(){
+      const dur = audio.duration || 0;
+      const cur = audio.currentTime || 0;
+      const pct = dur ? (cur / dur * 100) : 0;
+      fill.style.width = pct + '%';
+      handle.style.left = pct + '%';
+      timeEl.textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
+    }
+    audio.addEventListener('loadedmetadata', updateUI);
+    audio.addEventListener('timeupdate', updateUI);
+    audio.addEventListener('ended', () => { btn.innerHTML = '&#9654;'; });
+
+    btn.addEventListener('click', () => {
+      if (audio.paused) { audio.play(); btn.innerHTML = '&#10074;&#10074;'; }
+      else { audio.pause(); btn.innerHTML = '&#9654;'; }
+    });
+
+    function seekFromEvent(e){
+      const r = track.getBoundingClientRect();
+      const clientX = (e.touches ? e.touches[0] : e).clientX;
+      const pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+      if (audio.duration) audio.currentTime = pct * audio.duration;
+      updateUI();
+    }
+    let seeking = false;
+    track.addEventListener('mousedown', e => { seeking = true; seekFromEvent(e); });
+    window.addEventListener('mousemove', e => { if (seeking) seekFromEvent(e); });
+    window.addEventListener('mouseup', () => { seeking = false; });
+    track.addEventListener('touchstart', e => { seeking = true; seekFromEvent(e); }, { passive:true });
+    track.addEventListener('touchmove', e => { if (seeking) seekFromEvent(e); }, { passive:true });
+    track.addEventListener('touchend', () => { seeking = false; });
+
+    return audio;
+  }
+
+  /* ---------------- Voice modal ---------------- */
+
+  function openVoiceModal(item){
+    modalShell(item.key, 'Add Voice', `
+      <div class="modal-field">
+        <label>Voice memo</label>
+        <div class="voice-track" id="voiceTrack">
+          <div class="voice-bars" id="voiceBars">
+            ${Array.from({length:22}).map(() => '<span class="vb"></span>').join('')}
+          </div>
+        </div>
+        <div class="voice-rec-row" id="voiceRecRow" style="display:none;">
+          <span><span class="voice-rec-dot">&#9679;</span>REC</span>
+          <span id="voiceTimer">0:00</span>
+        </div>
+        <button type="button" class="btn-primary record-btn" id="recordBtn">Record</button>
+        <div class="voice-status" id="voiceStatus">Not recorded yet</div>
+        <div id="voicePlayerWrap"></div>
+      </div>
+    `);
+
+    recordedUrl = null;
+    const recordBtn = document.getElementById('recordBtn');
+    const statusEl = document.getElementById('voiceStatus');
+    const playerWrap = document.getElementById('voicePlayerWrap');
+    const trackEl = document.getElementById('voiceTrack');
+    const recRow = document.getElementById('voiceRecRow');
+    const timerEl = document.getElementById('voiceTimer');
+    let timerInterval = null, recordStart = 0;
+
+    function startTimer(){
+      recordStart = Date.now();
+      timerEl.textContent = '0:00';
+      timerInterval = setInterval(() => {
+        const secs = Math.floor((Date.now() - recordStart) / 1000);
+        timerEl.textContent = fmtTime(secs);
+      }, 250);
+    }
+    function stopTimer(){
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    recordBtn.addEventListener('click', async () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          stopTimer();
+          trackEl.classList.remove('recording');
+          recRow.style.display = 'none';
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          recordedUrl = URL.createObjectURL(blob);
+          const { html } = audioPlayerHtml();
+          playerWrap.innerHTML = html;
+          wireAudioPlayer(playerWrap.querySelector('.audio-player'), recordedUrl);
+          statusEl.textContent = 'Recorded — play it back or record again';
+          statusEl.classList.remove('recording');
+          recordBtn.textContent = 'Record again';
+          recordBtn.classList.remove('recording');
+          stream.getTracks().forEach(t => t.stop());
+        };
+        mediaRecorder.start();
+        trackEl.classList.add('recording');
+        recRow.style.display = 'flex';
+        startTimer();
+        statusEl.textContent = 'Listening… speak into your mic';
+        statusEl.classList.add('recording');
+        recordBtn.textContent = 'Stop';
+        recordBtn.classList.add('recording');
+      } catch (err) {
+        statusEl.textContent = 'Mic permission needed to record';
+      }
+    });
+
+    document.getElementById('modalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!recordedUrl) {
+        statusEl.textContent = 'record something first';
+        statusEl.classList.add('recording');
+        return;
+      }
+      upsertCart(item.key, { key:item.key, label:item.label, img:item.img, type:'voice', data:{ url: recordedUrl } });
+      closeModal();
+    });
+  }
+
+  /* ---------------- Doodle modal ---------------- */
+
+  function openDoodleModal(item){
+    modalShell(item.key, 'Add Drawing', `
+      <div class="modal-field">
+        <label>Draw something</label>
+        <div class="doodle-canvas-wrap"><canvas id="doodleCanvas"></canvas></div>
+        <div class="doodle-colorbar" id="doodleColorBar">
+          <span class="doodle-colorbar-handle" id="doodleColorHandle"></span>
+        </div>
+        <div class="doodle-tools">
+          <button type="button" class="brush-btn" data-size="3">thin</button>
+          <button type="button" class="brush-btn active" data-size="5">med</button>
+          <button type="button" class="brush-btn" data-size="9">thick</button>
+          <button type="button" class="clear-btn" id="doodleClear">clear</button>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Caption</label>
+        <input type="text" name="caption" placeholder="caption (optional)">
+      </div>
+    `);
+
+    const canvas = document.getElementById('doodleCanvas');
+    const wrap = canvas.parentElement;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = wrap.clientWidth * dpr;
+    canvas.height = wrap.clientHeight * dpr;
+    doodleCtx = canvas.getContext('2d');
+    doodleCtx.scale(dpr, dpr);
+    doodleCtx.fillStyle = '#fdf7ef';
+    doodleCtx.fillRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+    doodleColor = '#1c1a17'; doodleSize = 5;
+
+    function pos(e){
+      const r = canvas.getBoundingClientRect();
+      const p = e.touches ? e.touches[0] : e;
+      return { x: p.clientX - r.left, y: p.clientY - r.top };
+    }
+    function start(e){ doodleDrawing = true; draw(e); }
+    function end(){ doodleDrawing = false; doodleCtx.beginPath(); }
+    function draw(e){
+      if (!doodleDrawing) return;
+      e.preventDefault();
+      const { x, y } = pos(e);
+      doodleCtx.lineWidth = doodleSize;
+      doodleCtx.lineCap = 'round';
+      doodleCtx.lineJoin = 'round';
+      doodleCtx.strokeStyle = doodleColor;
+      doodleCtx.lineTo(x, y);
+      doodleCtx.stroke();
+      doodleCtx.beginPath();
+      doodleCtx.moveTo(x, y);
+    }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive:false });
+    canvas.addEventListener('touchmove', draw, { passive:false });
+    canvas.addEventListener('touchend', end);
+
+    // Hue spectrum color bar: drag or tap anywhere along it to pick a color,
+    // works with mouse and touch alike.
+    const colorBar = document.getElementById('doodleColorBar');
+    const colorHandle = document.getElementById('doodleColorHandle');
+    let barDragging = false;
+
+    function hueToColor(t){
+      const hue = Math.max(0, Math.min(1, t)) * 360;
+      return `hsl(${hue.toFixed(0)}, 88%, 46%)`;
+    }
+    function setFromPointer(clientX){
+      const r = colorBar.getBoundingClientRect();
+      const t = (clientX - r.left) / r.width;
+      const tt = Math.max(0, Math.min(1, t));
+      doodleColor = hueToColor(tt);
+      colorHandle.style.left = (tt * 100) + '%';
+      colorHandle.style.background = doodleColor;
+    }
+    function barPointerX(e){ return (e.touches ? e.touches[0] : e).clientX; }
+    function barStart(e){ barDragging = true; setFromPointer(barPointerX(e)); }
+    function barMove(e){ if (!barDragging) return; e.preventDefault(); setFromPointer(barPointerX(e)); }
+    function barEnd(){ barDragging = false; }
+
+    colorBar.addEventListener('mousedown', barStart);
+    window.addEventListener('mousemove', barMove);
+    window.addEventListener('mouseup', barEnd);
+    colorBar.addEventListener('touchstart', barStart, { passive:false });
+    colorBar.addEventListener('touchmove', barMove, { passive:false });
+    colorBar.addEventListener('touchend', barEnd);
+    // start the handle at a warm red-orange to match the ink default look
+    setFromPointer(colorBar.getBoundingClientRect().left + colorBar.getBoundingClientRect().width * 0.02);
+
+    document.querySelectorAll('.brush-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.brush-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        doodleSize = parseInt(b.dataset.size, 10);
+      });
+    });
+    document.getElementById('doodleClear').addEventListener('click', () => {
+      doodleCtx.fillStyle = '#fdf7ef';
+      doodleCtx.fillRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+    });
+
+    document.getElementById('modalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const caption = e.target.querySelector('[name="caption"]').value.trim();
+      const dataUrl = canvas.toDataURL('image/png');
+      upsertCart(item.key, { key:item.key, label:item.label, img:item.img, type:'doodle', data:{ dataUrl, caption } });
+      closeModal();
+    });
+  }
+
+  /* ---------------- Flowers gallery ---------------- */
+
+  const BOUQUETS_DATA = [
+    { key:'mums_burlap',          label:'Mixed Mums',            img:'img4/bouquets/mums_burlap.png' },
+    { key:'pastel_vase',          label:'Pastel Ranunculus',     img:'img4/bouquets/pastel_vase.png' },
+    { key:'wildflower_vase',      label:'Wildflower',            img:'img4/bouquets/wildflower_vase.png' },
+    { key:'pink_tulip_burlap',    label:'Pink Tulips',           img:'img4/bouquets/pink_tulip_burlap.png' },
+    { key:'basket_pastel',        label:'Pastel Basket',         img:'img4/bouquets/basket_pastel.png' },
+    { key:'basket_peach',         label:'Peach Basket',          img:'img4/bouquets/basket_peach.png' },
+    { key:'pink_lily_carnation',  label:'Pink Lily & Carnation', img:'img4/bouquets/pink_lily_carnation.png' },
+    { key:'sunflower_gold_wrap',  label:'Sunflower & Rose',      img:'img4/bouquets/sunflower_gold_wrap.png' },
+    { key:'red_roses_black_wrap', label:'Red Roses',             img:'img4/bouquets/red_roses_black_wrap.png' },
+    { key:'newspaper_wild',       label:'Wild Bunch',            img:'img4/bouquets/newspaper_wild.png' },
+  ];
+
+  function openFlowerModal(item){
+    const existing = cart.find(c => c.key === 'flower');
+    const state = existing
+      ? { bouquet: existing.data.bouquet, caption: existing.data.caption || '' }
+      : { bouquet: null, caption: '' };
+
+    modalShell('flower', 'Add Flowers', `
+      <div class="bq-subtitle">Flowers for Your Loved Ones</div>
+      <div class="bq-gallery" id="bqGallery">
+        ${BOUQUETS_DATA.map(b => `
+          <button type="button" class="bq-card" data-key="${b.key}">
+            <div class="bq-card-img-wrap"><img src="${b.img}" alt="${b.label}"></div>
+            <span class="bq-card-name">${b.label}</span>
+          </button>`).join('')}
+      </div>
+      <div class="modal-field">
+        <label>Caption</label>
+        <input type="text" name="caption" placeholder="caption (optional)" value="${escapeAttr(state.caption||'')}">
+      </div>
+    `);
+
+    function refresh(){
+      document.querySelectorAll('.bq-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.key === state.bouquet);
+      });
+      const submitBtn = document.querySelector('#modalForm .btn-primary');
+      submitBtn.disabled = !state.bouquet;
+    }
+
+    document.querySelectorAll('.bq-card').forEach(c => {
+      c.addEventListener('click', () => { state.bouquet = c.dataset.key; refresh(); });
+    });
+
+    refresh();
+
+    document.getElementById('modalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!state.bouquet) return;
+      state.caption = e.target.querySelector('[name="caption"]').value.trim();
+      upsertCart('flower', { key:'flower', label:item.label, img:item.img, type:'flower', data: { ...state } });
+      closeModal();
+    });
+  }
+
+  /* ---------------- Cart rendering ---------------- */
+
+  function cartBodyHtml(c){
+    switch (c.type) {
+      case 'note':
+        return `<div class="ci-text">${escapeHtml(c.data.text)}</div>`;
+      case 'flower': {
+        const b = BOUQUETS_DATA.find(x => x.key === c.data.bouquet);
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
+                ${b ? `<img class="ci-thumb" src="${b.img}" alt="${b.label}">` : ''}`;
+      }
+      case 'photo':
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
+                ${c.data.file ? `<img class="ci-thumb" src="${c.data.file}" alt="photo">` : ''}`;
+      case 'song':
+        return `${c.data.title ? `<div class="ci-text">${escapeHtml(c.data.title)}</div>` : ''}
+                <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
+      case 'video':
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
+                <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
+      case 'gift':
+        return `${c.data.goodFor ? `<div class="ci-text">also good for: ${escapeHtml(c.data.goodFor)}</div>` : ''}
+                ${c.data.note ? `<div class="ci-text">${escapeHtml(c.data.note)}</div>` : ''}
+                <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
+      case 'voice':
+        return `<div data-voice-player="${c.key}"></div>`;
+      case 'doodle':
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
+                <img class="ci-thumb" src="${c.data.dataUrl}" alt="doodle">`;
+      default:
+        return '';
+    }
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  function renderCart(){
+    const list = document.getElementById('cartList');
+    if (cart.length === 0) {
+      list.innerHTML = '<div class="cart-empty">nothing added yet...</div>';
+      return;
+    }
+    list.innerHTML = cart.map(c => `
+      <div class="cart-item">
+        <img src="${c.img}" alt="${c.label}">
+        <div class="ci-main">
+          <div class="ci-title">${c.label}</div>
+          ${cartBodyHtml(c)}
+        </div>
+        <button class="remove-btn" data-key="${c.key}">remove</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.remove-btn').forEach(b => {
+      b.addEventListener('click', () => removeFromCart(b.dataset.key));
+    });
+    list.querySelectorAll('[data-voice-player]').forEach(el => {
+      const c = cart.find(x => x.key === el.dataset.voicePlayer);
+      if (c && c.data.url) {
+        const { html } = audioPlayerHtml();
+        el.innerHTML = html;
+        wireAudioPlayer(el.querySelector('.audio-player'), c.data.url);
+      }
+    });
+  }
+
+  function drawBarcode(svgEl, seed){
+    if (!svgEl) return;
+    let rnd = seed;
+    const rand = () => { rnd = (rnd * 9301 + 49297) % 233280; return rnd / 233280; };
+    const w = 300, h = 60;
+    svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svgEl.setAttribute('preserveAspectRatio', 'none');
+    let x = 0, bars = '';
+    while (x < w) {
+      const bw = 1.5 + rand() * 3.5;
+      if (rand() > 0.42) {
+        bars += `<rect x="${x.toFixed(1)}" y="0" width="${bw.toFixed(1)}" height="${h}" fill="#1c1a17"/>`;
+      }
+      x += bw;
+    }
+    svgEl.innerHTML = bars;
+  }
+
+  function randomBarcodeNum(){
+    let s = '';
+    for (let i=0;i<4;i++){ s += Math.floor(1000+Math.random()*9000)+' '; }
+    return s.trim();
+  }
+
+  /* ---------------- Recipient preview (closed box -> opened -> per-item) ---------------- */
+
+  function buildPreviewBoxLabel(){
+    const to = (document.getElementById('toName').value || '').trim() || 'Special ones';
+    const from = (document.getElementById('fromName').value || '').trim() || 'Someone';
+    const el = document.getElementById('previewBoxLabel');
+    el.innerHTML = `
+      <div class="pbl-head">Digital Care Package</div>
+      <span class="pbl-stamp">care &amp;<br>love</span>
+      <div class="pbl-row"><b>TO:</b> ${escapeHtml(to)}</div>
+      <div class="pbl-row"><b>FROM:</b> ${escapeHtml(from)}</div>
+    `;
+  }
+
+  function showPreviewStage(stage){
+    document.getElementById('previewStageBox').style.display = stage === 'box' ? '' : 'none';
+    document.getElementById('previewStageOpen').style.display = stage === 'open' ? '' : 'none';
+    document.getElementById('previewStageItem').style.display = stage === 'item' ? '' : 'none';
+  }
+
+  function renderScatterItems(){
+    const wrap = document.getElementById('previewScatter');
+    wrap.innerHTML = cart.map(c => `
+      <button type="button" class="preview-scatter-item" data-key="${c.key}">
+        <img src="${c.img}" alt="${c.label}">
+        <span class="pill">${c.label}</span>
+      </button>
+    `).join('');
+    wrap.querySelectorAll('.preview-scatter-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = cart.find(x => x.key === btn.dataset.key);
+        if (!c) return;
+        renderPreviewItemCard(c);
+        showPreviewStage('item');
+      });
+    });
+  }
+
+  function previewCardBody(c){
+    switch (c.type) {
+      case 'note':
+        return `<div class="preview-item-text">&ldquo;${escapeHtml(c.data.text)}&rdquo;</div>`;
+      case 'photo':
+        return `${c.data.file ? `<img class="preview-item-img" src="${c.data.file}" alt="photo">` : ''}
+                ${c.data.caption ? `<div class="preview-item-caption">${escapeHtml(c.data.caption)}</div>` : ''}`;
+      case 'song':
+        return `<div class="preview-item-title">${escapeHtml(c.data.title || 'song')}</div>
+                <a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open link</a>`;
+      case 'video':
+        return `<div class="preview-video-thumb"><button type="button" class="play-btn" id="previewVideoPlay">&#9654;</button></div>
+                <a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Watch on YouTube</a>`;
+      case 'gift':
+        return `<a class="preview-link-btn" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">Open gift</a>`;
+      case 'doodle':
+        return `${c.data.dataUrl ? `<img class="preview-item-img" src="${c.data.dataUrl}" alt="doodle">` : ''}
+                ${c.data.caption ? `<div class="preview-item-caption">${escapeHtml(c.data.caption)}</div>` : ''}`;
+      case 'voice':
+        return `<div id="previewVoicePlayerSlot"></div>`;
+      case 'flower': {
+        const b = BOUQUETS_DATA.find(x => x.key === c.data.bouquet);
+        return `${b ? `<img class="preview-item-img" src="${b.img}" alt="${b.label}">` : ''}
+                ${c.data.caption ? `<div class="preview-item-caption">${escapeHtml(c.data.caption)}</div>` : ''}`;
+      }
+      default:
+        return '';
+    }
+  }
+
+  function renderPreviewItemCard(c){
+    const card = document.getElementById('previewItemCard');
+    card.innerHTML = previewCardBody(c);
+    if (c.type === 'voice' && c.data.url) {
+      const slot = document.getElementById('previewVoicePlayerSlot');
+      const { html } = audioPlayerHtml();
+      slot.innerHTML = html;
+      wireAudioPlayer(slot.querySelector('.audio-player'), c.data.url);
+    }
+    if (c.type === 'video') {
+      const playBtn = document.getElementById('previewVideoPlay');
+      if (playBtn) playBtn.addEventListener('click', () => window.open(c.data.link, '_blank', 'noopener'));
+    }
+  }
+
+  function openPreview(){
+    buildPreviewBoxLabel();
+    showPreviewStage('box');
+    document.getElementById('previewOverlay').style.display = 'flex';
+  }
+  function closePreview(){
+    document.getElementById('previewOverlay').style.display = 'none';
+  }
+
+  document.getElementById('previewBtn').addEventListener('click', openPreview);
+  document.getElementById('previewClose').addEventListener('click', closePreview);
+  document.getElementById('previewBox').addEventListener('click', () => {
+    renderScatterItems();
+    showPreviewStage('open');
+  });
+  document.getElementById('previewBack').addEventListener('click', () => showPreviewStage('open'));
+
+  renderItems();
+  renderCart();
+  drawBarcode(document.getElementById('labelBarcode'), 42);
+  drawBarcode(document.getElementById('cartBarcode'), 17);
+  drawBarcode(document.getElementById('checkoutBarcode'), 77);
+  document.getElementById('labelBarcodeNum').textContent = randomBarcodeNum();
+
+  document.querySelectorAll('.label-row input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      inp.classList.toggle('filled', inp.value.trim().length > 0);
+    });
+  });
+</script>
+</body>
+</html>
