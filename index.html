@@ -566,7 +566,7 @@
   .clear-btn { border-color: var(--stamp); color: var(--stamp); margin-left:auto; }
 
   .cart-item .ci-text { font-size:12.5px; color:#55503f; line-height:1.4; margin-bottom:4px; }
-  .cart-item .ci-link { font-size:12px; color:#3a5fa0; word-break:break-all; }
+  .cart-item .ci-link { font-size:12px; color:#3a5fa0; display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .cart-item .ci-thumb { width:100%; max-width:120px; border-radius:6px; border:1px solid #d8d1bd; margin-top:6px; display:block; }
   .cart-item audio { width:100%; max-width:220px; margin-top:6px; }
 
@@ -831,18 +831,18 @@
     line-height: 1.7;
   }
   .preview-credit a {
-    color: #ffffff;
+    color: var(--stamp);
     text-decoration: underline;
-    font-weight: 700;
+    font-weight: 400;
   }
   .preview-credit .make-your-own {
     background: none;
     border: none;
     padding: 0;
     font: inherit;
-    color: #ffffff;
+    color: var(--stamp);
     text-decoration: underline;
-    font-weight: 700;
+    font-weight: 400;
     cursor: pointer;
   }
 
@@ -1390,16 +1390,25 @@
         mediaRecorder.stop();
         return;
       }
+      if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusEl.textContent = 'Recording isn\'t supported on this browser';
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         recordedChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
+        const mimeCandidates = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/aac', 'audio/ogg;codecs=opus'];
+        let chosenMime = '';
+        for (const m of mimeCandidates) {
+          if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) { chosenMime = m; break; }
+        }
+        mediaRecorder = chosenMime ? new MediaRecorder(stream, { mimeType: chosenMime }) : new MediaRecorder(stream);
         mediaRecorder.ondataavailable = (e) => { if (e.data.size) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
           stopTimer();
           trackEl.classList.remove('recording');
           recRow.style.display = 'none';
-          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || chosenMime || 'audio/webm' });
           const reader = new FileReader();
           reader.onload = () => {
             recordedUrl = reader.result;
@@ -1619,13 +1628,10 @@
       case 'note':
         return `<div class="ci-text">${escapeHtml(c.data.text)}</div>`;
       case 'flower': {
-        const b = BOUQUETS_DATA.find(x => x.key === c.data.bouquet);
-        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
-                ${b ? `<img class="ci-thumb" src="${b.img}" alt="${b.label}">` : ''}`;
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}`;
       }
       case 'photo':
-        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
-                ${c.data.file ? `<img class="ci-thumb" src="${c.data.file}" alt="photo">` : ''}`;
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}`;
       case 'song':
         return `${c.data.title ? `<div class="ci-text">${escapeHtml(c.data.title)}</div>` : ''}
                 <a class="ci-link" href="${escapeAttr(c.data.link)}" target="_blank" rel="noopener">${escapeHtml(c.data.link)}</a>`;
@@ -1639,11 +1645,20 @@
       case 'voice':
         return `<div data-voice-player="${c.key}"></div>`;
       case 'doodle':
-        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}
-                <img class="ci-thumb" src="${c.data.dataUrl}" alt="doodle">`;
+        return `${c.data.caption ? `<div class="ci-text">${escapeHtml(c.data.caption)}</div>` : ''}`;
       default:
         return '';
     }
+  }
+
+  function itemThumbSrc(c){
+    if (c.type === 'photo' && c.data.file) return c.data.file;
+    if (c.type === 'doodle' && c.data.dataUrl) return c.data.dataUrl;
+    if (c.type === 'flower' && c.data.bouquet) {
+      const b = BOUQUETS_DATA.find(x => x.key === c.data.bouquet);
+      if (b) return b.img;
+    }
+    return c.img;
   }
 
   function escapeHtml(s){
@@ -1659,7 +1674,7 @@
     }
     list.innerHTML = cart.map(c => `
       <div class="cart-item">
-        <img src="${c.img}" alt="${c.label}">
+        <img src="${itemThumbSrc(c)}" alt="${c.label}">
         <div class="ci-main">
           <div class="ci-title">${c.label}</div>
           ${cartBodyHtml(c)}
@@ -1723,7 +1738,7 @@
     const wrap = document.getElementById('previewScatter');
     wrap.innerHTML = cart.map(c => `
       <button type="button" class="preview-scatter-item" data-key="${c.key}">
-        <img src="${c.img}" alt="${c.label}">
+        <img src="${itemThumbSrc(c)}" alt="${c.label}">
         <span class="pill">${c.label}</span>
       </button>
     `).join('');
