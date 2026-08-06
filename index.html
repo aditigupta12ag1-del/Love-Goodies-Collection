@@ -1738,41 +1738,52 @@
     document.getElementById('previewOverlay').style.display = 'none';
   }
 
-  /* ---------------- Share link (encode/decode package state in the URL) ---------------- */
+  /* ---------------- Share link (Save to database) ---------------- */
 
-  function encodeState(){
+  async function buildShareUrl(){
     const to = (document.getElementById('toName').value || '').trim();
     const from = (document.getElementById('fromName').value || '').trim();
-    const json = JSON.stringify({ to, from, cart });
-    return btoa(unescape(encodeURIComponent(json)));
+    const payload = { to, from, cart };
+
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) throw new Error('Failed to save');
+    const { id } = await res.json();
+    return location.origin + location.pathname + '?id=' + id;
   }
 
-  function decodeState(str){
+  async function restoreFromDatabase(){
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (!id) return false;
+
     try {
-      const json = decodeURIComponent(escape(atob(str)));
-      return JSON.parse(json);
-    } catch (e) { return null; }
+      const res = await fetch('/api/get?id=' + id);
+      if (!res.ok) return false;
+      const data = await res.json();
+      
+      if (!data || !Array.isArray(data.cart)) return false;
+      if (data.to) document.getElementById('toName').value = data.to;
+      if (data.from) document.getElementById('fromName').value = data.from;
+      cart.length = 0;
+      data.cart.forEach(c => cart.push(c));
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
 
-  function buildShareUrl(){
-    return location.origin + location.pathname + '#pkg=' + encodeState();
-  }
-
-  function restoreFromHash(){
-    if (!location.hash.startsWith('#pkg=')) return false;
-    const data = decodeState(location.hash.slice(5));
-    if (!data || !Array.isArray(data.cart)) return false;
-    if (data.to) document.getElementById('toName').value = data.to;
-    if (data.from) document.getElementById('fromName').value = data.from;
-    cart.length = 0;
-    data.cart.forEach(c => cart.push(c));
-    return true;
-  }
-
-  document.getElementById('generateLinkBtn').addEventListener('click', () => {
+  document.getElementById('generateLinkBtn').addEventListener('click', async () => {
     const out = document.getElementById('linkOutput');
     const input = document.getElementById('linkOutputInput');
     const msg = document.getElementById('linkMsg');
+    const btn = document.getElementById('generateLinkBtn');
+
     if (cart.length === 0) {
       out.style.display = 'block';
       input.value = '';
@@ -1780,17 +1791,29 @@
       msg.textContent = '';
       return;
     }
-    const url = buildShareUrl();
-    input.value = url;
-    out.style.display = 'block';
-    input.focus();
-    input.select();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url)
-        .then(() => { msg.textContent = 'link copied — paste it anywhere to share'; })
-        .catch(() => { msg.textContent = 'link ready below — tap it to copy'; });
-    } else {
-      msg.textContent = 'link ready below — tap it to copy';
+
+    const originalText = btn.textContent;
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
+    try {
+      const url = await buildShareUrl();
+      input.value = url;
+      out.style.display = 'block';
+      input.focus();
+      input.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+          .then(() => { msg.textContent = 'link copied — paste it anywhere to share'; })
+          .catch(() => { msg.textContent = 'link ready below — tap it to copy'; });
+      } else {
+        msg.textContent = 'link ready below — tap it to copy';
+      }
+    } catch (e) {
+      msg.textContent = 'Failed to generate link. Try again.';
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
     }
   });
 
@@ -1817,8 +1840,7 @@
   document.getElementById('previewBack').addEventListener('click', () => showPreviewStage('open'));
 
   renderItems();
-  const openedFromLink = restoreFromHash();
-  renderCart();
+  
   drawBarcode(document.getElementById('labelBarcode'), 42);
   drawBarcode(document.getElementById('cartBarcode'), 17);
   drawBarcode(document.getElementById('checkoutBarcode'), 77);
@@ -1831,7 +1853,16 @@
     });
   });
 
-  if (openedFromLink) openPreview();
+  restoreFromDatabase().then(openedFromLink => {
+    renderCart();
+    
+    // Refresh label inputs if they were filled by DB load
+    document.querySelectorAll('.label-row input').forEach(inp => {
+      inp.classList.toggle('filled', inp.value.trim().length > 0);
+    });
+
+    if (openedFromLink) openPreview();
+  });
 </script>
 </body>
 </html>
