@@ -1177,9 +1177,10 @@
     `;
     document.getElementById('modalClose').addEventListener('click', closeModal);
     document.getElementById('modalCancel').addEventListener('click', closeModal);
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'modalOverlay') closeModal();
-    });
+    // Note: tapping outside the modal no longer closes it — on mobile, tapping
+    // outside to dismiss the keyboard was silently discarding whatever the
+    // person had typed (e.g. a note) since it never got saved to the cart.
+    // Closing now requires an explicit tap on the × or Cancel button.
     document.addEventListener('keydown', escCloseOnce);
   }
 
