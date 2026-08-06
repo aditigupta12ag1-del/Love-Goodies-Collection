@@ -7,7 +7,7 @@
 <title>digital care package</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#fdfbf4;
@@ -25,7 +25,7 @@
   html, body {
     margin:0;
     padding:0;
-    background: #DAA064;
+    background: #D6A36F;
     color: var(--ink);
     font-family: 'Space Mono', 'Courier New', monospace;
     min-height:100vh;
@@ -45,9 +45,9 @@
     font-size:11px;
     letter-spacing:3px;
     text-transform:uppercase;
-    color: #5C4F3E;
+    color: #ffffff;
     margin-bottom: 22px;
-    opacity:0.75;
+    opacity:0.9;
   }
 
   .layout {
@@ -139,15 +139,6 @@
     padding: 22px 22px 10px;
     position:relative;
     margin-top: 6px;
-  }
-  .receipt::after{
-    content:"";
-    display:block;
-    height:14px;
-    margin: 0 -22px;
-    background-image: radial-gradient(circle at 10px 0, transparent 7px, var(--kraft) 7.5px);
-    background-size: 20px 14px;
-    background-position: 0 -7px;
   }
   .r-title {
     text-align:center;
@@ -715,11 +706,26 @@
   .checkout-actions { display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; }
   .checkout-actions .btn-primary, .checkout-actions .btn-secondary { width:100%; padding: 13px 18px; }
   .checkout-footer { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .link-output { margin-top: 14px; text-align: left; }
+  .link-output input {
+    width: 100%;
+    border: 1.3px solid #c9c1ab;
+    border-radius: 8px;
+    background: #fffdf8;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--ink);
+    padding: 9px 11px;
+    outline: none;
+    cursor: pointer;
+  }
+  .link-output input:focus { border-color: var(--stamp); }
+  .link-msg { font-size: 11px; color: var(--stamp); margin-top: 6px; font-weight: 700; text-align: center; }
 
   /* ---------- Recipient preview overlay ---------- */
   .preview-overlay {
     position: fixed; inset:0;
-    background: #DAA064;
+    background: #D6A36F;
     z-index: 2000;
     display: flex;
     align-items: center;
@@ -747,49 +753,72 @@
     color: var(--stamp);
     margin-bottom: 34px;
   }
-  .preview-title.small { font-size: 22px; margin-bottom: 22px; }
+  .preview-title.small {
+    font-size: 22px;
+    margin-bottom: 22px;
+    font-family: 'Poppins', 'Space Mono', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0,0,0,.18);
+  }
+  .preview-title.parcel {
+    font-family: 'Poppins', 'Space Mono', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0,0,0,.18);
+  }
 
+  @keyframes parcelHover {
+    0%   { transform: translateY(0) rotate(0deg); }
+    25%  { transform: translateY(-9px) rotate(-1.5deg); }
+    50%  { transform: translateY(-2px) rotate(1deg); }
+    75%  { transform: translateY(-10px) rotate(-0.5deg); }
+    100% { transform: translateY(0) rotate(0deg); }
+  }
   .preview-box {
     position: relative;
-    width: 240px; height: 190px;
+    width: 280px;
     margin: 0 auto;
     border: none;
-    border-radius: 4px;
-    background: linear-gradient(145deg, #c9a06a, #b3854e);
-    box-shadow: 0 18px 30px rgba(0,0,0,.22), inset 0 0 0 1px rgba(0,0,0,.08);
+    background: none;
+    padding: 0;
+    animation: parcelHover 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 18px 22px rgba(0,0,0,.28));
   }
-  .preview-box::before, .preview-box::after {
-    content:"";
-    position:absolute;
-    background: rgba(255,255,255,.16);
+  @keyframes boxShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    15% { transform: translateX(-7px) rotate(-4deg); }
+    30% { transform: translateX(6px) rotate(4deg); }
+    45% { transform: translateX(-6px) rotate(-3deg); }
+    60% { transform: translateX(5px) rotate(3deg); }
+    75% { transform: translateX(-3px) rotate(-1.5deg); }
+    90% { transform: translateX(2px) rotate(1deg); }
   }
-  .preview-box::before { top:0; left:0; right:0; height: 14px; }
-  .preview-box::after { top:0; bottom:0; left:50%; width: 14px; transform: translateX(-50%); }
-  .preview-box-label {
+  .preview-box.shaking { animation: boxShake .5s ease-in-out; }
+  .preview-box img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .preview-box-name {
     position: absolute;
-    left: 50%; top: 58%;
-    transform: translate(-50%, -50%) rotate(-1deg);
-    width: 84%;
-    background: var(--paper);
-    border: 1.3px solid var(--ink);
-    border-radius: 3px;
-    padding: 8px 10px 6px;
-    box-shadow: 3px 3px 0 rgba(0,0,0,.14);
+    left: 21%;
+    font-family: 'Space Mono', 'Courier New', monospace;
+    font-weight: 700;
+    font-size: 8.5px;
+    color: #1c1a17;
+    letter-spacing: .3px;
+    max-width: 15%;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .preview-box-label .pbl-head {
-    background: var(--ink); color: var(--paper);
-    font-size: 8.5px; font-weight:700; letter-spacing:1px;
-    padding: 2px 4px; margin: -8px -10px 5px; text-align:center;
-  }
-  .preview-box-label .pbl-row { font-size: 9px; text-align:left; margin-bottom:2px; }
-  .preview-box-label .pbl-row b { font-size: 8px; }
-  .preview-box-label .pbl-stamp {
-    position:absolute; top:-10px; right:-8px;
-    border: 1px dashed var(--stamp); color: var(--stamp);
-    font-size: 6px; font-weight:700; padding: 3px 4px; border-radius:2px;
-    background: var(--paper); transform: rotate(8deg); line-height:1.2;
-  }
-  .preview-tap-hint { font-size: 12px; color: var(--muted); margin-top: 20px; letter-spacing:1px; }
+  .preview-box-name.to { top: 49.5%; }
+  .preview-box-name.from { top: 64%; }
+  .preview-tap-hint { font-size: 12px; color: #ffffff; margin-top: 20px; letter-spacing:1px; }
 
   .preview-scatter {
     display: flex;
@@ -805,10 +834,10 @@
     gap: 8px;
     border: none;
     background: none;
-    animation: floaty 2.6s ease-in-out infinite;
+    animation: floaty 5.5s ease-in-out infinite;
   }
-  .preview-scatter-item:nth-child(2n) { animation-duration: 3.1s; animation-delay: -.7s; }
-  .preview-scatter-item:nth-child(3n) { animation-duration: 2.3s; animation-delay: -1.4s; }
+  .preview-scatter-item:nth-child(2n) { animation-duration: 6.4s; animation-delay: -1.6s; }
+  .preview-scatter-item:nth-child(3n) { animation-duration: 5s; animation-delay: -3s; }
   .preview-scatter-item img { width: 64px; height:64px; object-fit:contain; filter: drop-shadow(2px 4px 5px rgba(0,0,0,.16)); }
   .preview-scatter-item .pill {
     background: var(--paper);
@@ -831,7 +860,7 @@
     display:block;
     margin: 0 0 16px;
     background:none; border:none;
-    font-size: 12px; color: var(--muted);
+    font-size: 15px; font-weight: 700; color: #ffffff;
     text-align:left;
   }
   .preview-item-title { font-weight:700; font-size:13px; margin-bottom:14px; }
@@ -875,15 +904,15 @@
       <div class="label-card">
         <div class="label-head">Digital Care Package</div>
         <div class="label-body">
-          <span class="stamp">to be delivered<br>with care and love</span>
+          <span class="stamp">Delivered with<br>love and care</span>
           <div class="label-row">
             <span class="k">TO:</span>
-            <input type="text" placeholder="Special ones" id="toName">
+            <input type="text" placeholder="Cutie" id="toName">
           </div>
           <div class="label-divider"></div>
           <div class="label-row" style="margin-bottom:0;">
             <span class="k">FROM:</span>
-            <input type="text" placeholder="Someone" id="fromName">
+            <input type="text" placeholder="Pookie" id="fromName">
           </div>
         </div>
         <div class="label-barcode-wrap">
@@ -932,6 +961,10 @@
         </div>
         <svg class="barcode" id="checkoutBarcode"></svg>
         <div class="checkout-footer">send it to someone special</div>
+        <div class="link-output" id="linkOutput" style="display:none;">
+          <input type="text" id="linkOutputInput" readonly>
+          <div class="link-msg" id="linkMsg"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -943,9 +976,11 @@
   <button type="button" class="preview-close" id="previewClose">&times;</button>
 
   <div id="previewStageBox" class="preview-stage">
-    <div class="preview-title">you've got mail</div>
+    <div class="preview-title parcel">you've got parcel</div>
     <button type="button" class="preview-box" id="previewBox">
-      <div class="preview-box-label" id="previewBoxLabel"></div>
+      <img src="parcel/box.png" alt="parcel box">
+      <span class="preview-box-name to" id="previewBoxTo"></span>
+      <span class="preview-box-name from" id="previewBoxFrom"></span>
     </button>
     <div class="preview-tap-hint">tap to open</div>
   </div>
@@ -1312,10 +1347,14 @@
           trackEl.classList.remove('recording');
           recRow.style.display = 'none';
           const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-          recordedUrl = URL.createObjectURL(blob);
-          const { html } = audioPlayerHtml();
-          playerWrap.innerHTML = html;
-          wireAudioPlayer(playerWrap.querySelector('.audio-player'), recordedUrl);
+          const reader = new FileReader();
+          reader.onload = () => {
+            recordedUrl = reader.result;
+            const { html } = audioPlayerHtml();
+            playerWrap.innerHTML = html;
+            wireAudioPlayer(playerWrap.querySelector('.audio-player'), recordedUrl);
+          };
+          reader.readAsDataURL(blob);
           statusEl.textContent = 'Recorded — play it back or record again';
           statusEl.classList.remove('recording');
           recordBtn.textContent = 'Record again';
@@ -1464,16 +1503,16 @@
   /* ---------------- Flowers gallery ---------------- */
 
   const BOUQUETS_DATA = [
-    { key:'mums_burlap',          label:'Mixed Mums',            img:'img4/bouquets/mums_burlap.png' },
-    { key:'pastel_vase',          label:'Pastel Ranunculus',     img:'img4/bouquets/pastel_vase.png' },
-    { key:'wildflower_vase',      label:'Wildflower',            img:'img4/bouquets/wildflower_vase.png' },
-    { key:'pink_tulip_burlap',    label:'Pink Tulips',           img:'img4/bouquets/pink_tulip_burlap.png' },
-    { key:'basket_pastel',        label:'Pastel Basket',         img:'img4/bouquets/basket_pastel.png' },
-    { key:'basket_peach',         label:'Peach Basket',          img:'img4/bouquets/basket_peach.png' },
-    { key:'pink_lily_carnation',  label:'Pink Lily & Carnation', img:'img4/bouquets/pink_lily_carnation.png' },
-    { key:'sunflower_gold_wrap',  label:'Sunflower & Rose',      img:'img4/bouquets/sunflower_gold_wrap.png' },
-    { key:'red_roses_black_wrap', label:'Red Roses',             img:'img4/bouquets/red_roses_black_wrap.png' },
-    { key:'newspaper_wild',       label:'Wild Bunch',            img:'img4/bouquets/newspaper_wild.png' },
+    { key:'mums_burlap',          label:'Mixed Mums',            img:'bouquets/mums_burlap.png' },
+    { key:'pastel_vase',          label:'Pastel Ranunculus',     img:'bouquets/pastel_vase.png' },
+    { key:'wildflower_vase',      label:'Wildflower',            img:'bouquets/wildflower_vase.png' },
+    { key:'pink_tulip_burlap',    label:'Pink Tulips',           img:'bouquets/pink_tulip_burlap.png' },
+    { key:'basket_pastel',        label:'Pastel Basket',         img:'bouquets/basket_pastel.png' },
+    { key:'basket_peach',         label:'Peach Basket',          img:'bouquets/basket_peach.png' },
+    { key:'pink_lily_carnation',  label:'Pink Lily & Carnation', img:'bouquets/pink_lily_carnation.png' },
+    { key:'sunflower_gold_wrap',  label:'Sunflower & Rose',      img:'bouquets/sunflower_gold_wrap.png' },
+    { key:'red_roses_black_wrap', label:'Red Roses',             img:'bouquets/red_roses_black_wrap.png' },
+    { key:'newspaper_wild',       label:'Wild Bunch',            img:'bouquets/newspaper_wild.png' },
   ];
 
   function openFlowerModal(item){
@@ -1615,15 +1654,10 @@
   /* ---------------- Recipient preview (closed box -> opened -> per-item) ---------------- */
 
   function buildPreviewBoxLabel(){
-    const to = (document.getElementById('toName').value || '').trim() || 'Special ones';
-    const from = (document.getElementById('fromName').value || '').trim() || 'Someone';
-    const el = document.getElementById('previewBoxLabel');
-    el.innerHTML = `
-      <div class="pbl-head">Digital Care Package</div>
-      <span class="pbl-stamp">care &amp;<br>love</span>
-      <div class="pbl-row"><b>TO:</b> ${escapeHtml(to)}</div>
-      <div class="pbl-row"><b>FROM:</b> ${escapeHtml(from)}</div>
-    `;
+    const to = (document.getElementById('toName').value || '').trim() || 'Cutie';
+    const from = (document.getElementById('fromName').value || '').trim() || 'Pookie';
+    document.getElementById('previewBoxTo').textContent = to;
+    document.getElementById('previewBoxFrom').textContent = from;
   }
 
   function showPreviewStage(stage){
@@ -1704,15 +1738,86 @@
     document.getElementById('previewOverlay').style.display = 'none';
   }
 
+  /* ---------------- Share link (encode/decode package state in the URL) ---------------- */
+
+  function encodeState(){
+    const to = (document.getElementById('toName').value || '').trim();
+    const from = (document.getElementById('fromName').value || '').trim();
+    const json = JSON.stringify({ to, from, cart });
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+
+  function decodeState(str){
+    try {
+      const json = decodeURIComponent(escape(atob(str)));
+      return JSON.parse(json);
+    } catch (e) { return null; }
+  }
+
+  function buildShareUrl(){
+    return location.origin + location.pathname + '#pkg=' + encodeState();
+  }
+
+  function restoreFromHash(){
+    if (!location.hash.startsWith('#pkg=')) return false;
+    const data = decodeState(location.hash.slice(5));
+    if (!data || !Array.isArray(data.cart)) return false;
+    if (data.to) document.getElementById('toName').value = data.to;
+    if (data.from) document.getElementById('fromName').value = data.from;
+    cart.length = 0;
+    data.cart.forEach(c => cart.push(c));
+    return true;
+  }
+
+  document.getElementById('generateLinkBtn').addEventListener('click', () => {
+    const out = document.getElementById('linkOutput');
+    const input = document.getElementById('linkOutputInput');
+    const msg = document.getElementById('linkMsg');
+    if (cart.length === 0) {
+      out.style.display = 'block';
+      input.value = '';
+      input.placeholder = 'add at least one item first';
+      msg.textContent = '';
+      return;
+    }
+    const url = buildShareUrl();
+    input.value = url;
+    out.style.display = 'block';
+    input.focus();
+    input.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url)
+        .then(() => { msg.textContent = 'link copied — paste it anywhere to share'; })
+        .catch(() => { msg.textContent = 'link ready below — tap it to copy'; });
+    } else {
+      msg.textContent = 'link ready below — tap it to copy';
+    }
+  });
+
+  document.getElementById('linkOutputInput').addEventListener('click', (e) => {
+    e.target.select();
+    if (navigator.clipboard && navigator.clipboard.writeText && e.target.value) {
+      navigator.clipboard.writeText(e.target.value)
+        .then(() => { document.getElementById('linkMsg').textContent = 'link copied — paste it anywhere to share'; });
+    }
+  });
+
   document.getElementById('previewBtn').addEventListener('click', openPreview);
   document.getElementById('previewClose').addEventListener('click', closePreview);
   document.getElementById('previewBox').addEventListener('click', () => {
-    renderScatterItems();
-    showPreviewStage('open');
+    const box = document.getElementById('previewBox');
+    if (box.classList.contains('shaking')) return;
+    box.classList.add('shaking');
+    setTimeout(() => {
+      box.classList.remove('shaking');
+      renderScatterItems();
+      showPreviewStage('open');
+    }, 500);
   });
   document.getElementById('previewBack').addEventListener('click', () => showPreviewStage('open'));
 
   renderItems();
+  const openedFromLink = restoreFromHash();
   renderCart();
   drawBarcode(document.getElementById('labelBarcode'), 42);
   drawBarcode(document.getElementById('cartBarcode'), 17);
@@ -1720,10 +1825,13 @@
   document.getElementById('labelBarcodeNum').textContent = randomBarcodeNum();
 
   document.querySelectorAll('.label-row input').forEach(inp => {
+    inp.classList.toggle('filled', inp.value.trim().length > 0);
     inp.addEventListener('input', () => {
       inp.classList.toggle('filled', inp.value.trim().length > 0);
     });
   });
+
+  if (openedFromLink) openPreview();
 </script>
 </body>
 </html>
