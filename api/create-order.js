@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const amount = 100; // ₹29.00 in paise
+    const amount = 1100; // ₹11.00 in paise
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
 
     const response = await fetch('https://api.razorpay.com/v1/orders', {
