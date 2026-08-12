@@ -711,7 +711,7 @@
   .checkout-actions { display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; }
   .checkout-actions .btn-primary, .checkout-actions .btn-secondary { width:100%; padding: 13px 18px; }
   .checkout-footer { font-size: 11px; color: var(--muted); margin-top: 8px; }
-  .price-note { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; }
+  .price-note { font-size: 11px; color: var(--muted); margin: 0 0 14px; text-align: center; }
   .link-output { margin-top: 14px; text-align: left; }
   .link-output input {
     width: 100%;
@@ -1007,11 +1007,11 @@
         <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
         <div class="checkout-select-label">*** GET YOUR LINK ***</div>
         <div class="checkout-divider"></div>
+        <div class="price-note" id="priceNote">Your first link is on us 💌 · ₹29 for each additional link</div>
         <div class="checkout-actions">
           <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
         </div>
-        <div class="price-note" id="priceNote">Your first link is on us 💌 · ₹29 for each additional link</div>
         <svg class="barcode" id="checkoutBarcode"></svg>
         <div class="checkout-footer">send it to someone special</div>
         <div class="link-output" id="linkOutput" style="display:none;">
