@@ -1007,7 +1007,7 @@
         <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
         <div class="checkout-select-label">*** GET YOUR LINK ***</div>
         <div class="checkout-divider"></div>
-        <div class="price-note" id="priceNote">Your first link is on us 💌 · ₹29 for each additional link</div>
+        <div class="price-note" id="priceNote">Your first link is on us 💌 · Rs. 29 for each additional link</div>
         <div class="checkout-actions">
           <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
@@ -1888,8 +1888,8 @@
     const note = document.getElementById('priceNote');
     if (!note) return;
     note.textContent = hasUsedFreeLink()
-      ? '₹29 per additional link'
-      : 'Your first link is on us 💌 · ₹29 for each additional link';
+      ? 'Rs. 29 per additional link'
+      : 'Your first link is on us 💌 · Rs. 29 for each additional link';
   }
 
   function payForLink(){
@@ -1992,6 +1992,8 @@
         input.placeholder = 'payment not completed';
         if (e && e.message === 'PAYMENT_UNAVAILABLE') {
           msg.textContent = 'payment isn\'t available right now — please try again shortly';
+        } else if (e && e.message === 'ORDER_FAILED') {
+          msg.textContent = 'payment setup isn\'t ready yet — please try again later';
         } else {
           msg.textContent = 'payment failed or could not be verified — try again';
         }
