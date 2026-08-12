@@ -711,6 +711,7 @@
   .checkout-actions { display:flex; flex-direction:column; gap:10px; margin-bottom: 18px; }
   .checkout-actions .btn-primary, .checkout-actions .btn-secondary { width:100%; padding: 13px 18px; }
   .checkout-footer { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .price-note { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; }
   .link-output { margin-top: 14px; text-align: left; }
   .link-output input {
     width: 100%;
@@ -924,6 +925,7 @@
     .bq-card { width: 118px; }
   }
 </style>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 <!-- Loading overlay shown instantly when a shared link is opened -->
@@ -1009,6 +1011,7 @@
           <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
         </div>
+        <div class="price-note" id="priceNote">Your first link is on us 💌 · ₹29 for each additional link</div>
         <svg class="barcode" id="checkoutBarcode"></svg>
         <div class="checkout-footer">send it to someone special</div>
         <div class="link-output" id="linkOutput" style="display:none;">
@@ -1870,6 +1873,72 @@
     return location.origin + location.pathname + '?id=' + id;
   }
 
+  /* ---------------- Payment (Razorpay) ---------------- */
+
+  const FREE_LINK_KEY = 'lovegoodies_free_link_used';
+
+  function hasUsedFreeLink(){
+    return localStorage.getItem(FREE_LINK_KEY) === '1';
+  }
+  function markFreeLinkUsed(){
+    try { localStorage.setItem(FREE_LINK_KEY, '1'); } catch (e) {}
+    refreshPriceNote();
+  }
+  function refreshPriceNote(){
+    const note = document.getElementById('priceNote');
+    if (!note) return;
+    note.textContent = hasUsedFreeLink()
+      ? '₹29 per additional link'
+      : 'Your first link is on us 💌 · ₹29 for each additional link';
+  }
+
+  function payForLink(){
+    return new Promise(async (resolve, reject) => {
+      if (typeof Razorpay === 'undefined') {
+        reject(new Error('PAYMENT_UNAVAILABLE'));
+        return;
+      }
+      let order;
+      try {
+        const orderRes = await fetch('/api/create-order', { method: 'POST' });
+        if (!orderRes.ok) throw new Error('ORDER_FAILED');
+        order = await orderRes.json();
+      } catch (e) {
+        reject(new Error('ORDER_FAILED'));
+        return;
+      }
+
+      const rzp = new Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: 'A Little Box of Love',
+        description: 'Generate another share link',
+        theme: { color: '#b5453c' },
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(response)
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.verified) resolve(true);
+            else reject(new Error('VERIFY_FAILED'));
+          } catch (e) {
+            reject(new Error('VERIFY_FAILED'));
+          }
+        },
+        modal: {
+          ondismiss: function () { reject(new Error('CANCELLED')); }
+        }
+      });
+      rzp.on('payment.failed', function () { reject(new Error('PAYMENT_FAILED')); });
+      rzp.open();
+    });
+  }
+
   async function restoreFromDatabase(){
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
@@ -1907,6 +1976,29 @@
     }
 
     const originalText = btn.textContent;
+    const needsPayment = hasUsedFreeLink();
+
+    if (needsPayment) {
+      btn.textContent = 'Opening payment...';
+      btn.disabled = true;
+      try {
+        await payForLink();
+      } catch (e) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        if (e && e.message === 'CANCELLED') return;
+        out.style.display = 'block';
+        input.value = '';
+        input.placeholder = 'payment not completed';
+        if (e && e.message === 'PAYMENT_UNAVAILABLE') {
+          msg.textContent = 'payment isn\'t available right now — please try again shortly';
+        } else {
+          msg.textContent = 'payment failed or could not be verified — try again';
+        }
+        return;
+      }
+    }
+
     btn.textContent = 'Saving...';
     btn.disabled = true;
 
@@ -1916,6 +2008,7 @@
       out.style.display = 'block';
       input.focus();
       input.select();
+      if (!needsPayment) markFreeLinkUsed();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url)
           .then(() => { msg.textContent = 'link copied — paste it anywhere to share'; })
@@ -1977,7 +2070,8 @@
   });
 
   renderItems();
-  
+  refreshPriceNote();
+
   drawBarcode(document.getElementById('labelBarcode'), 42);
   drawBarcode(document.getElementById('cartBarcode'), 17);
   drawBarcode(document.getElementById('checkoutBarcode'), 77);
