@@ -1007,7 +1007,7 @@
         <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
         <div class="checkout-select-label">*** GET YOUR LINK ***</div>
         <div class="checkout-divider"></div>
-        <div class="price-note" id="priceNote">Your first link is on us 💌 · Rs. 11.00 for each additional link</div>
+        <div class="price-note" id="priceNote">Rs. 11.00 per link</div>
         <div class="checkout-actions">
           <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
@@ -1874,22 +1874,13 @@
   }
 
   /* ---------------- Payment (Razorpay) ---------------- */
+  // Every "Generate Link" click requires payment — no free generations.
+  // Preview (local, no shareable link) always stays free and untouched.
 
-  const FREE_LINK_KEY = 'lovegoodies_free_link_used';
-
-  function hasUsedFreeLink(){
-    return localStorage.getItem(FREE_LINK_KEY) === '1';
-  }
-  function markFreeLinkUsed(){
-    try { localStorage.setItem(FREE_LINK_KEY, '1'); } catch (e) {}
-    refreshPriceNote();
-  }
   function refreshPriceNote(){
     const note = document.getElementById('priceNote');
     if (!note) return;
-    note.textContent = hasUsedFreeLink()
-      ? 'Rs. 11.00 per additional link'
-      : 'Your first link is on us 💌 · Rs. 11.00 for each additional link';
+    note.textContent = 'Rs. 11.00 per link';
   }
 
   function payForLink(){
@@ -1976,29 +1967,27 @@
     }
 
     const originalText = btn.textContent;
-    const needsPayment = hasUsedFreeLink();
 
-    if (needsPayment) {
-      btn.textContent = 'Opening payment...';
-      btn.disabled = true;
-      try {
-        await payForLink();
-      } catch (e) {
-        btn.textContent = originalText;
-        btn.disabled = false;
-        if (e && e.message === 'CANCELLED') return;
-        out.style.display = 'block';
-        input.value = '';
-        input.placeholder = 'payment not completed';
-        if (e && e.message === 'PAYMENT_UNAVAILABLE') {
-          msg.textContent = 'payment isn\'t available right now — please try again shortly';
-        } else if (e && e.message === 'ORDER_FAILED') {
-          msg.textContent = 'payment setup isn\'t ready yet — please try again later';
-        } else {
-          msg.textContent = 'payment failed or could not be verified — try again';
-        }
-        return;
+    // Every generation requires payment first — no free links, including the first one.
+    btn.textContent = 'Opening payment...';
+    btn.disabled = true;
+    try {
+      await payForLink();
+    } catch (e) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      if (e && e.message === 'CANCELLED') return;
+      out.style.display = 'block';
+      input.value = '';
+      input.placeholder = 'payment not completed';
+      if (e && e.message === 'PAYMENT_UNAVAILABLE') {
+        msg.textContent = 'payment isn\'t available right now — please try again shortly';
+      } else if (e && e.message === 'ORDER_FAILED') {
+        msg.textContent = 'payment setup isn\'t ready yet — please try again later';
+      } else {
+        msg.textContent = 'payment failed or could not be verified — try again';
       }
+      return;
     }
 
     btn.textContent = 'Saving...';
@@ -2010,7 +1999,6 @@
       out.style.display = 'block';
       input.focus();
       input.select();
-      if (!needsPayment) markFreeLinkUsed();
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url)
           .then(() => { msg.textContent = 'link copied — paste it anywhere to share'; })
