@@ -1007,7 +1007,7 @@
         <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
         <div class="checkout-select-label">*** GET YOUR LINK ***</div>
         <div class="checkout-divider"></div>
-        <div class="price-note" id="priceNote">Your first link is on us 💌 · Rs. 9.00 for each additional link</div>
+        <div class="price-note" id="priceNote">Your first link is on us 💌 · Rs. 11.00 for each additional link</div>
         <div class="checkout-actions">
           <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
@@ -1888,8 +1888,8 @@
     const note = document.getElementById('priceNote');
     if (!note) return;
     note.textContent = hasUsedFreeLink()
-      ? 'Rs. 9.00 per additional link'
-      : 'Your first link is on us 💌 · Rs. 9.00 for each additional link';
+      ? 'Rs. 11.00 per additional link'
+      : 'Your first link is on us 💌 · Rs. 11.00 for each additional link';
   }
 
   function payForLink(){
