@@ -1007,9 +1007,9 @@
         <div class="checkout-stamp-wrap"><span class="checkout-stamp">send your package</span></div>
         <div class="checkout-select-label">*** GET YOUR LINK ***</div>
         <div class="checkout-divider"></div>
-        <div class="price-note" id="priceNote">Rs. 11.00 per link</div>
+        <div class="price-note" id="priceNote">Rs. 11.00 per additional link</div>
         <div class="checkout-actions">
-          <button type="button" class="btn-primary" id="generateLinkBtn">Generate Link</button>
+          <button type="button" class="btn-primary" id="generateLinkBtn">Pay & Generate Link</button>
           <button type="button" class="btn-secondary" id="previewBtn">Preview</button>
         </div>
         <svg class="barcode" id="checkoutBarcode"></svg>
@@ -1880,7 +1880,7 @@
   function refreshPriceNote(){
     const note = document.getElementById('priceNote');
     if (!note) return;
-    note.textContent = 'Rs. 11.00 per link';
+    note.textContent = 'Rs. 11.00 per additional link';
   }
 
   function payForLink(){
